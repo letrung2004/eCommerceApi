@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
+		<ProjectReference Include="..\InventoryService.Domain\InventoryService.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Common\" />
+		<Folder Include="Features\Events\" />
+		<Folder Include="Features\Inventory\Commands\" />
+		<Folder Include="Features\Reservations\Commands\" />
+		<Folder Include="Features\Reservations\Queries\GetAllReservations\" />
+		<Folder Include="Features\Reservations\Queries\GetReservationById\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+	</ItemGroup>
+
+</Project>
