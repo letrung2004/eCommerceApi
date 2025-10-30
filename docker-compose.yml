@@ -1,0 +1,108 @@
+﻿services:
+  # ========== DATABASE ==========
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Lqt@2004
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - ecommerce-net
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - ecommerce-net
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ecommerce-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - ecommerce-net
+
+  # ========== API GATEWAY ==========
+  gateway:
+    build:
+      context: .
+      dockerfile: source/Gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "8888:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - identity
+      - product
+    networks:
+      - ecommerce-net
+
+  # ========== MICROSERVICES ==========
+  identity:
+    build:
+      context: .
+      dockerfile: source/Identity/Dockerfile
+    container_name: identity
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - ecommerce-net
+
+  product:
+    build:
+      context: .
+      dockerfile: source/Product/Dockerfile
+    container_name: product
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - ecommerce-net
+
+  # basket:
+  #   build:
+  #     context: .
+  #     dockerfile: source/Basket/Dockerfile
+  #   container_name: basket
+  #   ports:
+  #     - "8082:8080"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   networks:
+  #     - ecommerce-net
+
+# ========== NETWORK ==========
+networks:
+  ecommerce-net:
+    driver: bridge
+
+# ========== VOLUMES ==========
+volumes:
+  sql_data:
+  mongo_data:
