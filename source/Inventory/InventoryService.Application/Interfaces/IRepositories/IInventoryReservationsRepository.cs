@@ -1,4 +1,5 @@
 ﻿using InventoryService.Domain.Entities;
+using InventoryService.Domain.Enums;
 using SharedLibrarySolution.Interfaces;
 
 namespace InventoryService.Application.Interfaces.IRepositories
@@ -21,8 +22,13 @@ namespace InventoryService.Application.Interfaces.IRepositories
         Task<IEnumerable<InventoryReservations>> GetExpiredReservationsAsync(DateTime now);
 
         /// <summary>
-        /// Chỉ đổi trạng thái reservation (Reserved, Released, Completed)
+        /// Chỉ đổi trạng thái reservation (Reserved, Released, Completed, Expired)
         /// </summary>
-        Task<InventoryReservations> UpdateStatusAsync(Guid id, string newStatus);
+        Task<InventoryReservations> UpdateStatusAsync(Guid id, ReservationStatus newStatus);
+
+        /// <summary>
+        /// Giải phóng giữ hàng (cập nhật trạng thái và thời gian ReleasedAt)
+        /// </summary>
+        Task<InventoryReservations> ReleaseAsync(Guid id);
     }
 }

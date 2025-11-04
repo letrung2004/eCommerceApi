@@ -22,6 +22,10 @@ namespace InventoryService.Infrastructure.Data
 
             modelBuilder.Entity<InventoryReservations>()
                 .HasIndex(r => new { r.OrderId, r.Sku });
+
+            //modelBuilder.Entity<InventoryReservations>()
+            //    .Property(r => r.Status)
+            //    .HasConversion<string>(); //Lưu enum dưới dạng chuỗi
         }
 
     }
