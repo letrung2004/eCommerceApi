@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using InventoryService.Application;
 using InventoryService.Infrastructure;
+using InventoryService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
 
 
@@ -10,21 +11,23 @@ var builder = WebApplication.CreateBuilder(args);
 //auto DI
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-// cấu hình jwt để đăng nhập
-//builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
 // cấu hình kết nói SQL server
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices(); // cấu hình MediatR, AutoMapper hoặc Validator.
 builder.Services.AddJWTAuthenticationScheme(builder.Configuration); // cấu hình Cấu hình middleware xác thực.
+builder.Services.AddQuartzJobs(); // job định kì clean các reservation bị hết hạn
 
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()); // chuyển enum int về string
+    });
+
+builder.Services.AddSwaggerDocumentation();// configs swagger
+
 
 
 // Autofac Container
@@ -39,17 +42,16 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSharedPolicies(); // test khi chưa bật gateway
 
-app.UseHttpsRedirection();
+// Swagger
+app.UseSwaggerDocumentation();
 
+// Auth
+app.UseAuthentication();
 app.UseAuthorization();
 
+// Map Controllers
 app.MapControllers();
 
 app.Run();
