@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.57.0" PrivateAssets="All" />
+		<PackageReference Include="Google.Protobuf" Version="3.26.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+
+	<ItemGroup>
+    <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<Protobuf Include="..\..\SharedLibrary\SharedLibrarySolution\Protos\inventory.proto" GrpcServices="Server" />
+		<Protobuf Include="..\..\SharedLibrary\SharedLibrarySolution\Protos\product.proto" GrpcServices="Both" /> 
+	</ItemGroup>
+
+</Project>

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using InventoryService.gRPC;
 using MassTransit;
 using ProductService.Presentation.Configurations;
 using ProductService.Presentation.Data;
@@ -13,11 +14,25 @@ using ProductService.Presentation.Features.Promotions.GetPromotions;
 using ProductService.Presentation.Features.Reviews.GetReviews;
 using ProductService.Presentation.Features.Test;
 using ProductService.Presentation.Services;
+using ProductService.Presentation.Services.Implementations;
+using ProductService.Presentation.Services.Interfaces;
 using SharedLibrarySolution.DependencyInjection;
-using SharedLibrarySolution.Mapping;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Add services to the container.
+
+builder.Services.AddGrpcClient<InventoryService.gRPC.Product.ProductClient>(client =>
+{
+    // client.Address = new Uri("http://inventoryservice-api:80"); // docker-compose
+    client.Address = new Uri("http://localhost:8083"); // môi trường dev
+
+});
+
+// Đăng ký DI cho service gọi gRPC
+builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
 builder.Services.AddJWTAuthenticationScheme(builder.Configuration); // lấy secrect key để decode
 builder.Services.AddHttpContextAccessor();
@@ -81,12 +96,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-// 🔹 Global Exception Middleware
+// Global Exception Middleware
 //app.UseSharedPoliciesForBackendServices(); // vừa có GlobalException vừa có chặn các request với header k phải gateway
 app.UseSharedPolicies();
 
 
-// 🔹 Swagger
+// Swagger
 app.UseSwaggerDocumentation();
 
 // Chứng thực và phân quyền

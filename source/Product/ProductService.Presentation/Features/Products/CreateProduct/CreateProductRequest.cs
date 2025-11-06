@@ -15,6 +15,8 @@ namespace ProductService.Presentation.Features.Products.CreateProduct
 
         //  cho phép up nhiều ảnh
         public IFormFileCollection? Images { get; set; }
+        public int StockQuantity { get; set; } = 0; // số lương hàng
+
     }
 
     //DTO nội bộ để deserialize VariantsJson
