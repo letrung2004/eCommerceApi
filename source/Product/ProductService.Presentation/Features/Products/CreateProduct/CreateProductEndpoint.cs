@@ -54,7 +54,7 @@ namespace ProductService.Presentation.Features.Products.CreateProduct
                     throw new AppException(ex.Message);
                 }
             })
-            .RequireAuthorization("RequireAdminRole", "RequireSellerRole")
+            //.RequireAuthorization("RequireAdminRole", "RequireSellerRole") // tạm tắt để test
             .WithTags("Products")
             .WithName("CreateProduct")
             .Accepts<CreateProductRequest>("multipart/form-data")

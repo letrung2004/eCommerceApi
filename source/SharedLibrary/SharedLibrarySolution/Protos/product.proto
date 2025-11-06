@@ -1,0 +1,38 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "InventoryService.gRPC";
+
+package product;
+
+// Định nghĩa yêu cầu để cập nhật tồn kho hoặc tạo mới tồn kho cho sản phẩm
+message UpdateStockRequest {
+    string product_id = 1;  // ID sản phẩm
+    int32 quantity = 2;     // Số lượng tồn kho
+}
+
+// Định nghĩa phản hồi cho yêu cầu cập nhật tồn kho
+message UpdateStockResponse {
+    bool success = 1;  // Thành công hay không
+    string message = 2;  // Thông báo lỗi (nếu có)
+}
+
+// Định nghĩa yêu cầu để tạo mới sản phẩm
+message CreateProductStockRequest {
+    string product_id = 1;  // ID sản phẩm
+    int32 quantity = 2;     // Số lượng tồn kho
+}
+
+// Định nghĩa phản hồi cho yêu cầu tạo mới sản phẩm
+message CreateProductStockResponse {
+    bool success = 1;  // Thành công hay không
+    string message = 2;  // Thông báo lỗi (nếu có)
+}
+
+// Định nghĩa service quản lý tồn kho
+service Product {
+    // Cập nhật tồn kho của sản phẩm
+    rpc UpdateStock (UpdateStockRequest) returns (UpdateStockResponse);
+
+    // Tạo mới tồn kho cho sản phẩm
+    rpc CreateProductStock (CreateProductStockRequest) returns (CreateProductStockResponse);
+}

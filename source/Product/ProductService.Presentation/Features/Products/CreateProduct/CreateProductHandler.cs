@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using ProductService.Presentation.Data;
 using ProductService.Presentation.Entities;
 using ProductService.Presentation.Services;
-using Newtonsoft.Json;
+using ProductService.Presentation.Services.Interfaces;
 using SharedLibrarySolution.Exceptions;
 
 
@@ -14,13 +15,21 @@ namespace ProductService.Presentation.Features.Products.CreateProduct
         private readonly MongoDbContext _context;
         private readonly IMapper _mapper;
         private readonly CloudinaryService _cloudinaryService;
+        private readonly IInventoryServiceClient _inventoryServiceClient;
 
-        public CreateProductHandler(MongoDbContext context, IMapper mapper, CloudinaryService cloudinaryService)
+        public CreateProductHandler(
+            MongoDbContext context,
+            IMapper mapper,
+            CloudinaryService cloudinaryService,
+            IInventoryServiceClient inventoryServiceClient
+        )
         {
             _context = context;
             _mapper = mapper;
             _cloudinaryService = cloudinaryService;
+            _inventoryServiceClient = inventoryServiceClient;
         }
+
 
         public async Task<ProductsResponse?> HandleAsync(CreateProductRequest request)
         {
@@ -60,6 +69,14 @@ namespace ProductService.Presentation.Features.Products.CreateProduct
 
             // luu xuong csdl
             await _context.Products.InsertOneAsync(product);
+
+            // gọi grpc 
+            var inventoryCreated = await _inventoryServiceClient.CreateInventoryAsync(product.Id, request.StockQuantity);
+
+            if (!inventoryCreated)
+            {
+                throw new AppException("Failed to create inventory for the product");
+            }
 
             // MAP dto trả response
             return _mapper.Map<ProductsResponse>(product);

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+option csharp_namespace = "InventoryService.gRPC";
+
+package inventory;
+
+message CheckInventoryRequest {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message CheckInventoryReply {
+  bool isAvailable = 1;
+}
+
+message ReserveInventoryRequest {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message ReserveInventoryReply {
+  bool success = 1;
+}
+
+message ReleaseInventoryRequest {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message ConfirmInventoryRequest {
+  string productId = 1;
+}
+
+message EmptyReply {}
+
+service Inventory {
+  rpc CheckInventory(CheckInventoryRequest) returns (CheckInventoryReply);
+  rpc ReserveInventory(ReserveInventoryRequest) returns (ReserveInventoryReply);
+  rpc ReleaseInventory(ReleaseInventoryRequest) returns (EmptyReply);
+  rpc ConfirmInventory(ConfirmInventoryRequest) returns (EmptyReply);
+}
