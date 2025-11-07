@@ -1,0 +1,31 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "PaymentService.gRPC.Protos";
+
+service RefundService {
+  rpc RequestRefund (RefundRequest) returns (RefundResponse);
+  rpc ApproveRefund (RefundActionRequest) returns (RefundResponse);
+  rpc RejectRefund (RefundActionRequest) returns (RefundResponse);
+  rpc GetRefundById (RefundGetRequest) returns (RefundResponse);
+}
+
+message RefundRequest {
+  string orderId = 1;
+  double amount = 2;
+}
+
+message RefundActionRequest {
+  string refundId = 1;
+}
+
+message RefundGetRequest {
+  string refundId = 1;
+}
+
+message RefundResponse {
+  string refundId = 1;
+  string orderId = 2;
+  double amount = 3;
+  string status = 4;
+  string requestedAt = 5;
+}
