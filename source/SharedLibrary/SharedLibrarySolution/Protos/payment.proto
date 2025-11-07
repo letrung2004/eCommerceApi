@@ -1,0 +1,58 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "PaymentService.gRPC";
+
+package payment;
+
+//Định nghĩa Dịch vụ gRPC cho PaymentService
+service PaymentService { // gọi PaymentService.PaymentServiceBase
+  // Tạo thanh toán mới
+  rpc CreatePayment (CreatePaymentRequest) returns (PaymentResponse);
+
+  // (Tùy chọn) Cập nhật trạng thái thanh toán
+  rpc UpdatePaymentStatus (UpdatePaymentStatusRequest) returns (PaymentResponse);
+
+  // xử lý thanh toán
+  rpc ProcessPayment (ProcessPaymentRequest) returns (PaymentResponse);
+
+  // hoàn tiền
+  rpc RefundPayment(RefundPaymentRequest) returns (PaymentResponse);
+
+  rpc MarkPaymentFailed (MarkPaymentFailedRequest) returns (PaymentResponse);
+  rpc GetPaymentStatus (GetPaymentStatusRequest) returns (PaymentResponse);
+}
+
+// Request tạo thanh toán
+message CreatePaymentRequest {
+  string order_id = 1;    // ID của đơn hàng
+  double amount = 2;      // Số tiền thanh toán
+}
+
+// Response trả về khi tạo thanh toán
+message PaymentResponse {
+  bool success = 1;       // Thanh toán được tạo thành công hay không
+  string payment_id = 2;  // ID của thanh toán (Guid)
+  string message = 3;     // Thông báo
+}
+
+// Request cập nhật trạng thái thanh toán
+message UpdatePaymentStatusRequest {
+ string payment_id = 1;
+  string status = 2; // Pending, Processed, Failed, Refunded
+}
+
+
+//Request Processed
+message ProcessPaymentRequest {
+	string payment_id = 1;
+}
+// RefundPayment
+message RefundPaymentRequest {
+  string payment_id = 1;
+}
+message MarkPaymentFailedRequest {
+  string payment_id = 1;
+}
+message GetPaymentStatusRequest {
+  string payment_id = 1;
+}
