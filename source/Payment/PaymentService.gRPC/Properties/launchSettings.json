@@ -4,17 +4,9 @@
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "http://localhost:5242",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "https://localhost:7013;http://localhost:5242",
+      "launchBrowser": true, // nếu = false lúc chạy lên k có auto mở browser lên
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:8085",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
