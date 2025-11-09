@@ -1,12 +1,20 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using InventoryService.Application;
+using OrderService.Application;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
+// client order service  kết nối với inventory service để gọi đến các method của inventory service
+builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient
+>(client =>
+{
+    client.Address = new Uri("http://localhost:8083"); // môi trường dev
+
+});
 
 // Dùng Autofac để DI tự động không cần khai báo
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
@@ -53,3 +61,25 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// note
+
+//➡ Khi biên dịch (codegen), nó tạo ra 2 thứ:
+
+//Bên InventoryService(server) triển khai InventoryBase
+//→ trả CheckInventoryReply.
+
+//Bên OrderService (client) sử dụng Inventory.InventoryClient
+//→ gọi CheckInventoryAsync(...) và nhận về CheckInventoryReply.
+
+
+
+
+//note 2
+
+//[OrderService.Application]    <--- gọi qua gRPC --->   [InventoryService.gRPC]
+//     |
+//     |--- dùng IInventoryServiceClient (interface)
+//     |
+//     |--- return bool hoặc DTO tùy logic nội bộ
+// phải có cấu hình ở file solution và cả program.cs: both( server + client), server, client

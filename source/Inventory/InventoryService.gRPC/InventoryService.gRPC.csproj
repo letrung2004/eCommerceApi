@@ -21,7 +21,7 @@
     <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
   </ItemGroup>
 	<ItemGroup>
-		<Protobuf Include="..\..\SharedLibrary\SharedLibrarySolution\Protos\inventory.proto" GrpcServices="Server" />
+		<Protobuf Include="..\..\SharedLibrary\SharedLibrarySolution\Protos\inventory.proto" GrpcServices="Both" />
 		<Protobuf Include="..\..\SharedLibrary\SharedLibrarySolution\Protos\product.proto" GrpcServices="Both" /> 
 	</ItemGroup>
 
