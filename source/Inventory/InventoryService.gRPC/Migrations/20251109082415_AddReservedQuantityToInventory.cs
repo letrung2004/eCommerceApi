@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace InventoryService.gRPC.Infrastructure.Data.Migrations
+namespace InventoryService.gRPC.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddReservedQuantityToInventory : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,7 +15,8 @@ namespace InventoryService.gRPC.Infrastructure.Data.Migrations
                 columns: table => new
                 {
                     ProductId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false)
+                    AvailableQuantity = table.Column<int>(type: "int", nullable: false),
+                    ReservedQuantity = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

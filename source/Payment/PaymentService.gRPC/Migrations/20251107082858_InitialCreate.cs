@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PaymentService.gRPC.Infrastructure.Data.Migrations
+namespace PaymentService.gRPC.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -26,6 +26,26 @@ namespace PaymentService.gRPC.Infrastructure.Data.Migrations
                 {
                     table.PrimaryKey("PK_Payments", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "Refunds",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Refunds", x => x.Id);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Refunds_OrderId",
+                table: "Refunds",
+                column: "OrderId");
         }
 
         /// <inheritdoc />
@@ -33,6 +53,9 @@ namespace PaymentService.gRPC.Infrastructure.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Payments");
+
+            migrationBuilder.DropTable(
+                name: "Refunds");
         }
     }
 }

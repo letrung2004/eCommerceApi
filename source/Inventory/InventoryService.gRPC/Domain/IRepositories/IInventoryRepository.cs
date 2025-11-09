@@ -7,6 +7,5 @@ namespace InventoryService.gRPC.Domain.IRepositories
         Task<InventoryItem?> GetByProductIdAsync(string productId);
         Task AddAsync(InventoryItem item);
         Task UpdateAsync(InventoryItem item);
-        Task SaveChangesAsync();
     }
 }

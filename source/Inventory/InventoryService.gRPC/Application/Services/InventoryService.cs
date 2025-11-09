@@ -23,14 +23,10 @@ namespace InventoryService.gRPC.Application.Services
         {
             var item = await _inventoryRepository.GetByProductIdAsync(productId);
             if (item == null || !item.HasSufficientQuantity(qty)) return false;
+
             item.Reserve(qty);
             await _inventoryRepository.UpdateAsync(item);
             return true;
-        }
-
-        public async Task ConfirmItem(string productId)
-        {
-            await Task.CompletedTask;
         }
 
         public async Task<bool> ReleaseItem(string productId, int qty)
@@ -41,6 +37,15 @@ namespace InventoryService.gRPC.Application.Services
             item.Release(qty);
             await _inventoryRepository.UpdateAsync(item);
             return true;
+        }
+
+        public async Task ConfirmItem(string productId)
+        {
+            var item = await _inventoryRepository.GetByProductIdAsync(productId);
+            if (item == null) throw new KeyNotFoundException("Product not found");
+
+            item.Confirm();
+            await _inventoryRepository.UpdateAsync(item);
         }
 
     }

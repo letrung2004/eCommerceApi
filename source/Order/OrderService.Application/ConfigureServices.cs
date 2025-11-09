@@ -7,14 +7,12 @@ namespace InventoryService.Application
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            //services.AddAutoMapper(Assembly.GetExecutingAssembly());
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            //services.AddAutoMapper(Assembly.GetExecutingAssembly()); // cũ cấu hình trong project thôi
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); // mới cấu hình ở sharelibrary
 
-            //services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddMediatR(ctg =>
             {
                 ctg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-                //ctg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
             });
 
             return services;
