@@ -7,16 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Inventory\InventoryService.gRPC\InventoryService.gRPC.csproj" />
     <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
     <ProjectReference Include="..\OrderService.Domain\OrderService.Domain.csproj" />
-
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Features\OrderItem\" />
     <Folder Include="Features\Order\Queries\" />
   </ItemGroup>
-
 </Project>
 
 

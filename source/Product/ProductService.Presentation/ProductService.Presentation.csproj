@@ -29,5 +29,5 @@
 	  <ProjectReference Include="..\..\Inventory\InventoryService.gRPC\InventoryService.gRPC.csproj" />
 	  <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
 	</ItemGroup>
-
+	
 </Project>

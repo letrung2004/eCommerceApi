@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using InventoryService.gRPC;
 using MassTransit;
 using ProductService.Presentation.Configurations;
 using ProductService.Presentation.Data;
@@ -24,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// kết nối với inventory service để gọi đến các method của inventory service
 builder.Services.AddGrpcClient<InventoryService.gRPC.Product.ProductClient>(client =>
 {
     // client.Address = new Uri("http://inventoryservice-api:80"); // docker-compose

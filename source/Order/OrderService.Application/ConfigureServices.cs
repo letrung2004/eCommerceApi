@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
-namespace InventoryService.Application
+namespace OrderService.Application
 {
     public static class ConfigureServices
     {
