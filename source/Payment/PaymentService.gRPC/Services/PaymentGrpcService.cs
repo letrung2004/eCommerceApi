@@ -1,5 +1,7 @@
 ﻿using Grpc.Core;
+using PaymentService.gRPC.Application.Mappings;
 using PaymentService.gRPC.Application.Services;
+using PaymentService.gRPC.Domain.Entities;
 
 
 namespace PaymentService.gRPC.Services
@@ -14,21 +16,16 @@ namespace PaymentService.gRPC.Services
         }
 
         // ghi đè lại các phương thức
-
         public override async Task<PaymentResponse> CreatePayment(CreatePaymentRequest request, ServerCallContext context)
         {
             var payment = await _appService.CreatePaymentAsync(Guid.Parse(request.OrderId), (decimal)request.Amount);
-            return new PaymentResponse
-            {
-                Success = true,
-                PaymentId = payment.Id.ToString(),
-                Message = "Payment created"
-            };
+            return PaymentMapper.ToResponse(payment, "Payment created");
         }
 
         public override async Task<PaymentResponse> UpdatePaymentStatus(UpdatePaymentStatusRequest request, ServerCallContext context)
         {
             var success = await _appService.UpdatePaymentStatusAsync(Guid.Parse(request.PaymentId), request.Status);
+
             return new PaymentResponse
             {
                 Success = success,
@@ -39,37 +36,17 @@ namespace PaymentService.gRPC.Services
 
         public override async Task<PaymentResponse> ProcessPayment(ProcessPaymentRequest request, ServerCallContext context)
         {
-            await _appService.ProcessPaymentAsync(Guid.Parse(request.PaymentId));
-            return new PaymentResponse
-            {
-                Success = true,
-                PaymentId = request.PaymentId,
-                Message = "Payment processed"
-            };
-        }
+            var p = await _appService.ProcessPaymentAsync(Guid.Parse(request.PaymentId));
+            return PaymentMapper.ToResponse(p, "Payment processed");
 
-        // Hoàn tiền
-        public override async Task<PaymentResponse> RefundPayment(RefundPaymentRequest request, ServerCallContext context)
-        {
-            await _appService.RefundPaymentAsync(Guid.Parse(request.PaymentId));
-            return new PaymentResponse
-            {
-                Success = true,
-                PaymentId = request.PaymentId,
-                Message = "Payment refunded"
-            };
+            
         }
 
         // Đánh dấu thất bại
         public override async Task<PaymentResponse> MarkPaymentFailed(MarkPaymentFailedRequest request, ServerCallContext context)
         {
-            await _appService.MarkFailedAsync(Guid.Parse(request.PaymentId));
-            return new PaymentResponse
-            {
-                Success = true,
-                PaymentId = request.PaymentId,
-                Message = "Payment marked as failed"
-            };
+            var payment = await _appService.MarkFailedAsync(Guid.Parse(request.PaymentId));
+            return PaymentMapper.ToResponse(payment, "Payment marked as failed");
         }
 
         // Lấy trạng thái thanh toán

@@ -20,7 +20,7 @@ namespace PaymentService.gRPC.Application.Services
             return payment;
         }
 
-        public async Task ProcessPaymentAsync(Guid paymentId)
+        public async Task<Payment> ProcessPaymentAsync(Guid paymentId)
         {
             var payment = await _paymentRepository.GetByIdAsync(paymentId);
             if (payment == null)
@@ -28,17 +28,19 @@ namespace PaymentService.gRPC.Application.Services
 
             payment.MarkProcessed();
             await _paymentRepository.UpdateAsync(payment);
+            return payment;
         }
 
-        public async Task RefundPaymentAsync(Guid paymentId)
-        {
-            var payment = await _paymentRepository.GetByIdAsync(paymentId);
-            if (payment == null)
-                throw new KeyNotFoundException("Payment không tồn tại.");
+        //public async Task<Payment> RefundPaymentAsync(Guid paymentId)
+        //{
+        //    var payment = await _paymentRepository.GetByIdAsync(paymentId);
+        //    if (payment == null)
+        //        throw new KeyNotFoundException("Payment không tồn tại.");
 
-            payment.MarkRefunded();
-            await _paymentRepository.UpdateAsync(payment);
-        }
+        //    payment.MarkRefunded();
+        //    await _paymentRepository.UpdateAsync(payment);
+        //    return payment;
+        //}
 
         public async Task<PaymentStatus?> GetPaymentStatusAsync(Guid paymentId)
         {
@@ -46,7 +48,7 @@ namespace PaymentService.gRPC.Application.Services
             return payment?.Status;
         }
 
-        public async Task MarkFailedAsync(Guid paymentId)
+        public async Task<Payment> MarkFailedAsync(Guid paymentId)
         {
             var payment = await _paymentRepository.GetByIdAsync(paymentId);
             if (payment == null)
@@ -54,6 +56,7 @@ namespace PaymentService.gRPC.Application.Services
 
             payment.MarkFailed();
             await _paymentRepository.UpdateAsync(payment);
+            return payment;
         }
 
         public async Task<bool> UpdatePaymentStatusAsync(Guid paymentId, string newStatus)

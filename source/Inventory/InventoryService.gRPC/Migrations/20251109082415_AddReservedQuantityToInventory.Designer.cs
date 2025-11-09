@@ -3,16 +3,19 @@ using InventoryService.gRPC.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace InventoryService.gRPC.Infrastructure.Data.Migrations
+namespace InventoryService.gRPC.Migrations
 {
     [DbContext(typeof(InventoryServiceDbContext))]
-    partial class InventoryServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109082415_AddReservedQuantityToInventory")]
+    partial class AddReservedQuantityToInventory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,7 +29,10 @@ namespace InventoryService.gRPC.Infrastructure.Data.Migrations
                     b.Property<string>("ProductId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("Quantity")
+                    b.Property<int>("AvailableQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReservedQuantity")
                         .HasColumnType("int");
 
                     b.HasKey("ProductId");

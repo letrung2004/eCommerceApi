@@ -1,10 +1,6 @@
 ﻿using InventoryService.gRPC.Domain.Entities;
 using InventoryService.gRPC.Domain.IRepositories;
 
-// điều phối các nghiệp vụ của product service gửi qua 
-// -> thêm sản phẩm mới -> cập nhật lại kho
-// chịu trách nhiệm tạo/cập nhật tồn kho sản phẩm (khi có sản phẩm mới).
-
 namespace InventoryService.gRPC.Application.Services
 {
     public class ProductAppService
@@ -27,13 +23,16 @@ namespace InventoryService.gRPC.Application.Services
             }
             return false;
         }
+
         public async Task<bool> UpdateQuantityInventory(string productId, int qty)
         {
             var product = await _inventoryRepository.GetByProductIdAsync(productId);
             if (product == null) return false;
+
             product.UpdateQuantity(qty);
+            await _inventoryRepository.UpdateAsync(product);
+
             return true;
         }
     }
 }
-

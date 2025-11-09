@@ -13,7 +13,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 
 // cấu hình kết nói SQL server
-//builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices(); // cấu hình MediatR, AutoMapper hoặc Validator.
 builder.Services.AddJWTAuthenticationScheme(builder.Configuration); // cấu hình Cấu hình middleware xác thực.
 
@@ -27,14 +27,14 @@ builder.Services.AddControllers()
 
 builder.Services.AddSwaggerDocumentation();
 
-// Autofac Container
-//builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
-//{
-//    containerBuilder.RegisterAssemblyTypes(typeof(OrderService.Infrastructure.ConfigureServices).Assembly)
-//        .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Hasher"))
-//        .AsImplementedInterfaces()
-//        .InstancePerLifetimeScope();
-//});
+//Autofac - auto dependency injections Container
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    containerBuilder.RegisterAssemblyTypes(typeof(OrderService.Infrastructure.ConfigureServices).Assembly)
+        .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Hasher"))
+        .AsImplementedInterfaces()
+        .InstancePerLifetimeScope();
+});
 
 var app = builder.Build();
 

@@ -24,11 +24,6 @@ namespace InventoryService.gRPC.Infrastructure.Repositories
             return await _context.InventoryItems.FindAsync(productId);
         }
 
-        public Task SaveChangesAsync()
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task UpdateAsync(InventoryItem item)
         {
             _context.InventoryItems.Update(item);
