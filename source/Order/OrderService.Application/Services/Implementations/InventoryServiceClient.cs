@@ -1,10 +1,10 @@
-﻿using OrderService.Application.Services.Interfaces;
-using InventoryService.gRPC;
+﻿using InventoryService.gRPC;
+using OrderService.Application.Services.Interfaces;
 
 
 namespace OrderService.Application.Services.Implementations
 {
-    internal class InventoryServiceClient : IInventoryServiceClient
+    public class InventoryServiceClient : IInventoryServiceClient
     {
         private readonly InventoryService.gRPC.Inventory.InventoryClient _grpcClient;
 
@@ -12,24 +12,38 @@ namespace OrderService.Application.Services.Implementations
         {
             _grpcClient = grpcClient;
         }
-        public Task<bool> CheckStockAsync(string productId, int quantity)
+        public async Task<bool> CheckStockAsync(string productId, int quantity)
         {
-            throw new NotImplementedException();
+            var res = await _grpcClient.CheckInventoryAsync(new CheckInventoryRequest
+            {
+                ProductId = productId,
+                Quantity = quantity
+            });
+            return res.IsAvailable;
         }
 
-        public Task ConfirmStockAsync(string productId)
+        public async Task ConfirmStockAsync(string productId)
         {
-            throw new NotImplementedException();
+            var res = await _grpcClient.ConfirmInventoryAsync(new ConfirmInventoryRequest { ProductId = productId });
         }
 
-        public Task ReleaseStockAsync(string productId, int quantity)
+        public async Task ReleaseStockAsync(string productId, int quantity)
         {
-            throw new NotImplementedException();
+            await _grpcClient.ReleaseInventoryAsync(new ReleaseInventoryRequest
+            {
+                ProductId = productId,
+                Quantity = quantity
+            });
         }
 
-        public Task<bool> ReserveStockAsync(string productId, int quantity)
+        public async Task<bool> ReserveStockAsync(string productId, int quantity)
         {
-            throw new NotImplementedException();
+            var response = await _grpcClient.ReserveInventoryAsync(new ReserveInventoryRequest
+            {
+                ProductId = productId,
+                Quantity = quantity
+            });
+            return response.Success;
         }
     }
 }

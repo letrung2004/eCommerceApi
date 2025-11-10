@@ -7,7 +7,7 @@ using OrderService.Infrastructure.Data;
 using SharedLibrarySolution.Commons;
 using SharedLibrarySolution.Responses;
 
-namespace OrderService.Infrastructure.Repository
+namespace OrderService.Infrastructure.Persistence.Repository
 {
     public class OrderRepository : IOrderRepository
     {
