@@ -15,9 +15,9 @@ namespace OrderService.Domain.Entities
 
         private Order() { }
 
-        public Order(Guid userId, IEnumerable<OrderItem> items)
+        public Order(Guid id, Guid userId, IEnumerable<OrderItem> items)
         {
-            Id = Guid.NewGuid();
+            Id = id;
             UserId = userId;
             OrderItems = items.ToList();
             TotalPrice = CalculateTotal();
@@ -30,7 +30,7 @@ namespace OrderService.Domain.Entities
             return OrderItems.Sum(item => item.TotalPrice);
         }
 
-        // ✅ Thêm nhiều OrderItem vào đơn
+        // Thêm nhiều OrderItem vào đơn
         public void AddOrderItems(IEnumerable<OrderItem> items)
         {
             foreach (var item in items)

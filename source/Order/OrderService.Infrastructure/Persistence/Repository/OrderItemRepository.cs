@@ -4,7 +4,7 @@ using OrderService.Application.DTOs;
 using OrderService.Application.Interfaces.IRepository;
 using OrderService.Infrastructure.Data;
 
-namespace OrderService.Infrastructure.Repository
+namespace OrderService.Infrastructure.Persistence.Repository
 {
     public class OrderItemRepository : IOrderItemRepository
     {

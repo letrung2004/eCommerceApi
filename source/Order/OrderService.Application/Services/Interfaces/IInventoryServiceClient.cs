@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting.Server;
-
-namespace OrderService.Application.Services.Interfaces
+﻿namespace OrderService.Application.Services.Interfaces
 {
     public interface IInventoryServiceClient
     {

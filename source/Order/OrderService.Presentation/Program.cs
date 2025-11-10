@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using OrderService.Application;
+using OrderService.Application.Services.Interfaces;
+using OrderService.Application.Services.Implementations;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
@@ -15,6 +17,8 @@ builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient
     client.Address = new Uri("http://localhost:8083"); // môi trường dev
 
 });
+// Đăng ký wrapper interface call đển inventoryservice
+builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
 // Dùng Autofac để DI tự động không cần khai báo
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
@@ -39,10 +43,14 @@ builder.Services.AddSwaggerDocumentation();
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterAssemblyTypes(typeof(OrderService.Infrastructure.ConfigureServices).Assembly)
-        .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Hasher"))
+        .Where(t => t.Name.EndsWith("Repository") ||
+                    t.Name.EndsWith("Service") ||
+                    t.Name.EndsWith("Hasher") ||
+                    t.Name.EndsWith("UnitOfWork")) 
         .AsImplementedInterfaces()
         .InstancePerLifetimeScope();
 });
+
 
 var app = builder.Build();
 
