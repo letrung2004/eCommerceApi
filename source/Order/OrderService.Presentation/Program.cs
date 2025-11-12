@@ -6,6 +6,7 @@ using OrderService.Application.Services.Implementations;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
+using MassTransit;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,24 @@ builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient
 });
 // Đăng ký wrapper interface call đển inventoryservice
 builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
+
+// MassTransit + RabbitMQ
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rabbitMqSection = builder.Configuration.GetSection("RabbitMQ");
+        var host = rabbitMqSection["Host"];
+        var username = rabbitMqSection["Username"];
+        var password = rabbitMqSection["Password"];
+
+        cfg.Host(new Uri($"rabbitmq://{host}"), h =>
+        {
+            h.Username(username);
+            h.Password(password);
+        });
+    });
+});
 
 // Dùng Autofac để DI tự động không cần khai báo
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
@@ -69,6 +88,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
 
 // note
 

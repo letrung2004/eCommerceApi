@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-OrderSaga.Worker-0f9e35dc-0555-47e2-9ffe-ac48d5bdf634</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Dapper" Version="2.1.66" />
+	  <PackageReference Include="Google.Protobuf" Version="3.30.2" />
+	  <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
+	  <PackageReference Include="Grpc.Net.ClientFactory" Version="2.70.0" />
+	  <PackageReference Include="Grpc.Tools" Version="2.65.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="MassTransit" Version="7.1.1" />
+	  <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.1.1" />
+	  <PackageReference Include="MassTransit.RabbitMQ" Version="7.1.1" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.3" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
+	  <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Inventory\InventoryService.gRPC\InventoryService.gRPC.csproj" />
+    <ProjectReference Include="..\..\Payment\PaymentService.gRPC\PaymentService.gRPC.csproj" />
+    <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
+  </ItemGroup>
+	
+</Project>

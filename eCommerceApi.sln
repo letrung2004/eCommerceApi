@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentService.gRPC", "sour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryService.gRPC", "source\Inventory\InventoryService.gRPC\InventoryService.gRPC.csproj", "{589D9CDB-964C-4700-ABDE-7D52E5058481}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSaga.Worker", "source\Orchestrator\OrderSaga.Worker\OrderSaga.Worker.csproj", "{3E3418DC-401B-4909-A583-1F4D7F568CE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,10 @@ Global
 		{589D9CDB-964C-4700-ABDE-7D52E5058481}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{589D9CDB-964C-4700-ABDE-7D52E5058481}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{589D9CDB-964C-4700-ABDE-7D52E5058481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E3418DC-401B-4909-A583-1F4D7F568CE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E3418DC-401B-4909-A583-1F4D7F568CE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E3418DC-401B-4909-A583-1F4D7F568CE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E3418DC-401B-4909-A583-1F4D7F568CE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +147,7 @@ Global
 		{E9A6035A-8D9E-4FFB-A804-3E040C967063} = {F5143758-10AD-4C86-BC0E-11C6B6F16D53}
 		{904F2326-A820-4445-BAD8-B791C13B0ABE} = {1EF5FEBE-30B7-40E5-ACD9-7C6D5B8AF082}
 		{589D9CDB-964C-4700-ABDE-7D52E5058481} = {3FEDC474-D2D2-480E-B4E6-0D37584C5908}
+		{3E3418DC-401B-4909-A583-1F4D7F568CE7} = {8348F664-C71A-4D91-B834-4260DA2DA989}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07928BD6-6D6D-4F8B-A40A-A50C7700531E}

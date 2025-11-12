@@ -22,29 +22,29 @@ namespace OrderService.Application.Services.Implementations
             return res.IsAvailable;
         }
 
-        public async Task ConfirmStockAsync(string productId)
-        {
-            var res = await _grpcClient.ConfirmInventoryAsync(new ConfirmInventoryRequest { ProductId = productId });
-        }
+        //public async Task ConfirmStockAsync(string productId)
+        //{
+        //    var res = await _grpcClient.ConfirmInventoryAsync(new ConfirmInventoryRequest { ProductId = productId });
+        //}
 
-        public async Task ReleaseStockAsync(string productId, int quantity)
-        {
-            await _grpcClient.ReleaseInventoryAsync(new ReleaseInventoryRequest
-            {
-                ProductId = productId,
-                Quantity = quantity
-            });
-        }
+        //public async Task ReleaseStockAsync(string productId, int quantity)
+        //{
+        //    await _grpcClient.ReleaseInventoryAsync(new ReleaseInventoryRequest
+        //    {
+        //        ProductId = productId,
+        //        Quantity = quantity
+        //    });
+        //}
 
-        public async Task<bool> ReserveStockAsync(string productId, int quantity)
-        {
-            var response = await _grpcClient.ReserveInventoryAsync(new ReserveInventoryRequest
-            {
-                ProductId = productId,
-                Quantity = quantity
-            });
-            return response.Success;
-        }
+        //public async Task<bool> ReserveStockAsync(string productId, int quantity)
+        //{
+        //    var response = await _grpcClient.ReserveInventoryAsync(new ReserveInventoryRequest
+        //    {
+        //        ProductId = productId,
+        //        Quantity = quantity
+        //    });
+        //    return response.Success;
+        //}
     }
 }
 
