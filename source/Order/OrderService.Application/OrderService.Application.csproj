@@ -13,8 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\OrderItem\" />
-    <Folder Include="Features\Order\Queries\" />
+    <PackageReference Include="MassTransit" Version="7.1.1" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.1.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="7.1.1" />
   </ItemGroup>
 </Project>
 

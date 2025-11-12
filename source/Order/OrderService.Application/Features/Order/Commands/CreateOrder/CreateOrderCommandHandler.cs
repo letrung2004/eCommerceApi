@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
+using MassTransit;
 using MediatR;
 using OrderService.Application.DTOs;
-using OrderService.Application.Features.Order.Commands.CreateOrder;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Services.Interfaces;
 using OrderService.Domain.Entities;
+using SharedLibrarySolution.Events;
 using SharedLibrarySolution.Exceptions;
 
 namespace OrderService.Application.Features.Order.Commands.CreateOrder
@@ -14,15 +15,17 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
         private readonly IInventoryServiceClient _inventoryClient;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-
+        private readonly IPublishEndpoint _publishEndpoint;
         public CreateOrderCommandHandler(
             IInventoryServiceClient inventoryClient,
             IUnitOfWork unitOfWork,
-            IMapper mapper)
+            IMapper mapper,
+            IPublishEndpoint publishEndpoint)
         {
             _inventoryClient = inventoryClient;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _publishEndpoint = publishEndpoint;
         }
 
 
@@ -57,10 +60,12 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
             await orderRepo.CreateAsync(newOrder);
 
             //Commit transaction
-            //await _unitOfWork.CommitAsync(); //tắc để debug
+            await _unitOfWork.CommitAsync(); //tắc để debug
 
             // gửi event order create -> payment (if don't success rollback)
-
+            var interationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
+            await _publishEndpoint.Publish(interationEvent, cancellationToken); 
+            // mastransit gửi event OrderCreatedIntegrationEvent đi => consummer nào đăng ký nhận event này thì sẽ nhận
 
             return _mapper.Map<OrderResponse>(newOrder);
 
@@ -98,17 +103,4 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
 //                             |--(gRPC async)--> PaymentService.PreAuthorize()
 //                             |
 //                             |--Publish--> InventoryReservedEvent / PaymentAuthorizedEvent ...
-//[CreateOrderCommandHandler]
-//   |
-//   |--(gRPC sync)--> InventoryService.CheckInventory()
-//   |
-//   |--Save Order(status: Pending)
-//   |
-//   |--Publish--> OrderCreatedEvent
-//                     |
-//                     +---> [SagaOrchestrator]
-//                             |
-//                             |--(gRPC async)--> InventoryService.ReserveInventory()
-//                             |--(gRPC async)--> PaymentService.PreAuthorize()
-//                             |
-//                             |--Publish--> InventoryReservedEvent / PaymentAuthorizedEvent ...
+
