@@ -1,6 +1,6 @@
 ﻿namespace SharedLibrarySolution.Events
 {
-    public class OrderCreatedIntegrationEvent : IntegrationEvent
+    public class OrderCreatedIntegrationEvent
     {
         public Guid OrderId { get; set; } 
         public Guid UserId { get; set; }

@@ -1,5 +1,7 @@
-﻿using MassTransit;
+﻿using GreenPipes;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OrderSaga.Worker.Consumers;
 using OrderSaga.Worker.Data;
 using OrderSaga.Worker.Orchestrator.Implementations;
@@ -27,21 +29,28 @@ var host = Host.CreateDefaultBuilder(args)
         services.Configure<RabbitMqSettings>(configuration.GetSection("RabbitMQ"));
         var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>();
 
+        // CONSUMER - Cấu hình MANUAL giống Basket
         services.AddMassTransit(x =>
         {
             x.AddConsumer<OrderCreatedConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(rabbitMqSettings!.Host, h =>
+                cfg.Host($"rabbitmq://{rabbitMqSettings!.Host}", h =>
                 {
                     h.Username(rabbitMqSettings.Username);
                     h.Password(rabbitMqSettings.Password);
                 });
 
-                cfg.ConfigureEndpoints(context);
+                cfg.ReceiveEndpoint("order_saga_queue", e =>
+                {
+                    e.ConfigureConsumeTopology = false; // tắt auto binding
+                    e.Bind("SharedLibrarySolution.Events:IntegrationEvent"); // bind queue tới exchange
+                    e.ConfigureConsumer<OrderCreatedConsumer>(context);
+                });
             });
         });
+
 
         services.AddScoped<ISagaOrchestrator, OrderSagaOrchestrator>();
         services.AddScoped<ISagaStateRepository, SagaStateRepository>();
@@ -70,5 +79,11 @@ using (var scope = host.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-Console.WriteLine("✅ OrderSaga.Worker started. Listening for OrderCreatedEvent...");
+Console.WriteLine("====================================");
+Console.WriteLine("✅ OrderSaga.Worker STARTED");
+Console.WriteLine("📡 Listening on: order_saga_queue");
+Console.WriteLine("🔗 Exchange: order_exchange");
+Console.WriteLine("🔑 Routing Key: order.created");
+Console.WriteLine("====================================");
+
 await host.RunAsync();

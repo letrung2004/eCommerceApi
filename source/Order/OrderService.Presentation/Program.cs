@@ -7,6 +7,7 @@ using OrderService.Application.Services.Interfaces;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
+using SharedLibrarySolution.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(
 });
 builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
+// PRODUCER - Cấu hình giống Basket/Product
 builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
@@ -35,7 +37,10 @@ builder.Services.AddMassTransit(x =>
             h.Username(username);
             h.Password(password);
         });
-        cfg.ConfigureEndpoints(context);
+
+        // Cấu hình Exchange cho OrderCreatedIntegrationEvent
+        cfg.Message<OrderCreatedIntegrationEvent>(m => m.SetEntityName("order_exchange"));
+        cfg.Publish<OrderCreatedIntegrationEvent>(p => p.ExchangeType = "direct");
     });
 });
 

@@ -63,9 +63,14 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
             //await _unitOfWork.CommitAsync(); //tắc để debug
 
             // gửi event order create -> payment (if don't success rollback)
-            var interationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
-            await _publishEndpoint.Publish(interationEvent, cancellationToken); 
-            // mastransit gửi event OrderCreatedIntegrationEvent đi => consummer nào đăng ký nhận event này thì sẽ nhận
+            var integrationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
+            // PUBLISH với ROUTING KEY
+            await _publishEndpoint.Publish(integrationEvent, ctx =>
+            {
+                ctx.SetRoutingKey("order.created");
+            }, cancellationToken);
+
+            Console.WriteLine($"PRODUCER SENT => OrderId={newOrder.Id}, Total=${newOrder.TotalPrice}, UserId=${newOrder.UserId}");
 
             return _mapper.Map<OrderResponse>(newOrder);
 

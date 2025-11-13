@@ -2,7 +2,7 @@
 using OrderSaga.Worker.Orchestrator.Interfaces;
 using SharedLibrarySolution.Events;
 
-// đây là class để lắng nghe các event được client gửi lên để thực hiện xử lý gọi đến orchestrator
+// Consumer để lắng nghe OrderCreatedIntegrationEvent và trigger Saga workflow
 namespace OrderSaga.Worker.Consumers
 {
     public class OrderCreatedConsumer : IConsumer<OrderCreatedIntegrationEvent>
@@ -18,24 +18,44 @@ namespace OrderSaga.Worker.Consumers
 
         public async Task Consume(ConsumeContext<OrderCreatedIntegrationEvent> context)
         {
-            var @event = context.Message;
-
-            Console.WriteLine($"🎯 SAGA RECEIVED => OrderId={@event.OrderId}, UserId={@event.UserId}, Total=${@event.TotalPrice}");
-
-            _logger.LogInformation("📦 Received OrderCreatedIntegrationEvent: OrderId={OrderId}", @event.OrderId);
-
             try
             {
+                var @event = context.Message;
+
+                //  Log chi tiết khi nhận được event
+                Console.WriteLine("========================================");
+                Console.WriteLine("SAGA RECEIVED EVENT");
+                Console.WriteLine($"   OrderId: {@event.OrderId}");
+                Console.WriteLine($"   UserId: {@event.UserId}");
+                Console.WriteLine($"   TotalPrice: ${@event.TotalPrice}");
+                Console.WriteLine("========================================");
+
+                _logger.LogInformation(
+                    "Received OrderCreatedIntegrationEvent: OrderId={OrderId}, UserId={UserId}, Total={Total}",
+                    @event.OrderId, @event.UserId, @event.TotalPrice
+                );
+
+                // Gọi Orchestrator để bắt đầu Saga
                 await _orchestrator.StartOrderProcessingSaga(@event, context.CancellationToken);
 
-                _logger.LogInformation("✅ Saga completed for OrderId={OrderId}", @event.OrderId);
+                Console.WriteLine($"Saga completed successfully for OrderId={@event.OrderId}");
+                _logger.LogInformation("Saga completed for OrderId={OrderId}", @event.OrderId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Saga failed for OrderId={OrderId}", @event.OrderId);
+                // ✅ Log lỗi chi tiết
+                Console.WriteLine("========================================");
+                Console.WriteLine($" SAGA FAILED");
+                Console.WriteLine($"   OrderId: {context.Message.OrderId}");
+                Console.WriteLine($"   Error: {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
+                Console.WriteLine("========================================");
+
+                _logger.LogError(ex, " Saga failed for OrderId={OrderId}", context.Message.OrderId);
+
+                //  Re-throw để MassTransit retry hoặc move to error queue
                 throw;
             }
         }
     }
-    
 }
