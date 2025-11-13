@@ -60,7 +60,7 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
             await orderRepo.CreateAsync(newOrder);
 
             //Commit transaction
-            await _unitOfWork.CommitAsync(); //tắc để debug
+            //await _unitOfWork.CommitAsync(); //tắc để debug
 
             // gửi event order create -> payment (if don't success rollback)
             var interationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);

@@ -28,7 +28,6 @@ namespace OrderService.Presentation.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(
                     StatusCodes.Status400BadRequest, "Dữ liệu không hợp lệ"));
-
             try
             {
                 var result = await _mediator.Send(command);

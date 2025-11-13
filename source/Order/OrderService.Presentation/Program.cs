@@ -1,15 +1,19 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using MassTransit;
 using OrderService.Application;
-using OrderService.Application.Services.Interfaces;
 using OrderService.Application.Services.Implementations;
+using OrderService.Application.Services.Interfaces;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
-using MassTransit;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddFilter("MassTransit", LogLevel.Debug);
+builder.Logging.AddFilter("MassTransit.RabbitMqTransport", LogLevel.Debug);
 
 // client order service  kết nối với inventory service để gọi đến các method của inventory service
 builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient
@@ -112,3 +116,67 @@ app.Run();
 //     |
 //     |--- return bool hoặc DTO tùy logic nội bộ
 // phải có cấu hình ở file solution và cả program.cs: both( server + client), server, client
+
+
+//+-----------+         +-----------------+        +-----------------+        +-------------------------+
+//|  Customer | ----->  |  Order Service  | -----> |   RabbitMQ      | -----> |  OrderSaga Orchestrator |
+//| CreateOrder|         | Save Order(Pending) |    |  order.created  |        | Start Saga Workflow     |
+//+-----------+         +-----------------+        +-----------------+        +-------------------------+
+//                                                                                     |
+//                                                                                     |
+//                                                                                     v
+//                                                                              +----------------+
+//                                                                              | SagaRepo       |
+//                                                                              | Save saga step |
+//                                                                              +----------------+
+//                                                                                     |
+//                                                                                     v
+//         +---------------------------------- Saga Steps ----------------------------------+
+//         | Step 1 | OrderService.MarkProcessing                                          |
+//         | Step 2 | InventoryService.ReserveInventory                                    |
+//         | Step 3 | PaymentService.ProcessPayment                                        |
+//         | Step 4 | OrderService.MarkPaid                                                |
+//         |                        |
+//         +--------------------------------------------------------------------------------+
+//                                                                                     |
+//                                                                                     v
+//                                                                            [If Error → Compensation]
+//                                                                                     |
+//                                                                                     v
+//                                                                               +---------------------+
+//                                                                               | Compensate Logic    |
+//                                                                               | - Refund payment    |
+//                                                                               | - Release inventory |
+//                                                                               | - Cancel order      |
+//                                                                               +---------------------+
+//+-----------+         +-----------------+        +-----------------+        +-------------------------+
+//|  Customer | ----->  |  Order Service  | -----> |   RabbitMQ      | -----> |  OrderSaga Orchestrator |
+//| CreateOrder|         | Save Order(Pending) |    |  order.created  |        | Start Saga Workflow    |
+//+-----------+         +-----------------+        +-----------------+        +-------------------------+
+//                                                                                     |
+//                                                                                     |
+//                                                                                     v
+//                                                                              +----------------+
+//                                                                              | SagaRepo       |
+//                                                                              | Save saga step |
+//                                                                              +----------------+
+//                                                                                     |
+//                                                                                     v
+//         +---------------------------------- Saga Steps ----------------------------------+
+//         | Step 1 | OrderService.MarkProcessing                                          |
+//         | Step 2 | InventoryService.ReserveInventory                                    |
+//         | Step 3 | PaymentService.ProcessPayment                                        |
+//         | Step 4 | OrderService.MarkPaid                                               |
+//         | Step 5 | (Optional) NotifyService.SendNotification                            |
+//         +--------------------------------------------------------------------------------+
+//                                                                                     |
+//                                                                                     v
+//                                                                            [If Error → Compensation]
+//                                                                                     |
+//                                                                                     v
+//                                                                               +---------------------+
+//                                                                               | Compensate Logic    |
+//                                                                               | - Refund payment    |
+//                                                                               | - Release inventory |
+//                                                                               | - Cancel order      |
+//                                                                               +---------------------+

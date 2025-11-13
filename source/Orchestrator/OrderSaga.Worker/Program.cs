@@ -10,8 +10,13 @@ using OrderSaga.Worker.Services.Implementations;
 using OrderSaga.Worker.Services.Interfaces;
 using OrderSaga.Worker.Settings;
 
-
 var host = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddConsole();
+        logging.SetMinimumLevel(LogLevel.Debug); // Hiển thị logs MassTransit
+    })
     .ConfigureServices((hostContext, services) =>
     {
         var configuration = hostContext.Configuration;
@@ -27,48 +32,53 @@ var host = Host.CreateDefaultBuilder(args)
         // MassTransit
         services.AddMassTransit(x =>
         {
-            x.AddConsumer<OrderCreatedConsumer>(); // đăng ký consummer xử lý event
+            x.AddConsumer<OrderCreatedConsumer>();
+
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(new Uri($"rabbitmq://{rabbitMqSettings!.Host}"), h =>
+                cfg.Host($"rabbitmq://{rabbitMqSettings!.Host}", h =>
                 {
                     h.Username(rabbitMqSettings.Username);
                     h.Password(rabbitMqSettings.Password);
                 });
 
-                // đăng ký nhận event OrderCreatedIntegrationEvent do OrderCreatedConsumer kế thừa OrderCreatedIntegrationEvent
-                cfg.ReceiveEndpoint("order_saga_queue", e => // ở order service kh cần gửi Chỉ cần publish đúng loại event → RabbitMQ sẽ định tuyến đúng nhờ binding mà MassTransit tự tạo.
+                // Queue và consumer
+                cfg.ReceiveEndpoint("order_saga_queue", e =>
                 {
-                    e.ConfigureConsumer<OrderCreatedConsumer>(context); // gắn consumer vào queue
+                    e.ConfigureConsumer<OrderCreatedConsumer>(context);
                 });
+
+                // Tự tạo mọi endpoint & binding cho consumer
+                cfg.ConfigureEndpoints(context);
             });
         });
 
-        // đăng ký DI Orchestrator & Repository
+        // DI Orchestrator & Repository
         services.AddScoped<ISagaOrchestrator, OrderSagaOrchestrator>();
         services.AddScoped<ISagaStateRepository, SagaStateRepository>();
 
-        // gRPC client cho InventoryService
-        services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(options =>
-        {
-            options.Address = new Uri(configuration["ServiceUrls:InventoryService"]!);
-        });
+        // Service clients
+        services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
+        services.AddScoped<IPaymentServiceClient, PaymentServiceClient>();
+        services.AddScoped<IOrderServiceClient, OrderServiceClient>();
 
-        // gRPC client cho PaymentService -- check chỗ này chưa import dc
+        // gRPC clients
+        services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(options =>
+            options.Address = new Uri(configuration["ServiceUrls:InventoryService"]!));
+
         services.AddGrpcClient<PaymentService.gRPC.PaymentService.PaymentServiceClient>(options =>
-        {
-            options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!);
-        });
+            options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!));
+
+        services.AddGrpcClient<PaymentService.gRPC.RefundService.RefundServiceClient>(options =>
+            options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!));
 
         // HTTP client for OrderService
         services.AddHttpClient<IOrderServiceClient, OrderServiceClient>(client =>
-        {
-            client.BaseAddress = new Uri(configuration["ServiceUrls:OrderService"]!);
-        });
+            client.BaseAddress = new Uri(configuration["ServiceUrls:OrderService"]!));
     })
     .Build();
 
-// Tạo database nếu chưa tồn tại
+// Migrate database nếu chưa có
 using (var scope = host.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -76,43 +86,5 @@ using (var scope = host.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-await host.RunAsync();  // ở đây host sẽ tạo 1 CancellationToken ngầm
-
-
-
-// đây là background worker lắng nghe event trên message broker (RabbitMQ / MassTransit)
-// để thực hiện các điều phối xử lý logics đến nhiều service liên quan đến nhau
-
-
-
-//Consumers/	Chứa các lớp Consumer (trình tiêu thụ event) — đây là điểm vào chính của Saga, nơi nhận event từ RabbitMQ (qua MassTransit). Ví dụ: OrderCreatedConsumer.cs sẽ nhận event OrderCreatedEvent từ OrderService.
-
-//Orchestrator/	Chứa lớp trung tâm như OrderSagaOrchestrator.cs, nơi điều phối toàn bộ các bước của Saga: gọi gRPC, cập nhật trạng thái, publish event tiếp theo.
-
-//Repositories/	Chứa các lớp thao tác DB (CRUD) như OrderSagaRepository.cs giúp lưu/cập nhật OrderSagaState.
-
-//Services/	Chứa các client để gọi tới các service khác qua gRPC, ví dụ: InventoryGrpcClient, PaymentGrpcClient, RefundGrpcClient.
-
-//Settings/	Chứa cấu hình app, như appsettings.json + các class config cho MassTransit, RabbitMQ, DB, gRPC endpoints.
-
-// sự kiện order.created được gửi lên => ở work ordersaga có OrderCreateConsummer hứng event sau đó gọi đến
-// orchestrator để xử lý nghiệp vụ consummer chị lắng nghe khong xử lý các logic => sau đó gửi event 
-
-//[User]
-//   ↓ HTTP
-//OrderService
-//   ├─> gRPC → Inventory.CheckStock
-//   ├─> Save Order (Pending)
-//   └─> Publish → OrderCreatedEvent
-//        ↓
-//[OrderSaga.Worker]
-//   ├─> Consumer nhận event
-//   ├─> SaveSagaStateAsync (step=None, status = InProgress)
-//   └─> Orchestrator xử lý tuần tự:
-//        1.ReserveInventory → publish InventoryReservedEvent
-//        2. PreAuthorizePayment → publish PaymentAuthorizedEvent
-//        3. CapturePayment → publish OrderConfirmedEvent
-//        ⚠️ Nếu fail bất kỳ bước nào:
-//            → rollback / release inventory
-//            → update saga state: Failed
-//            → publish compensation events: OrderCancelledEvent / PaymentFailedEvent
+Console.WriteLine("OrderSaga.Worker started. Listening for events...");
+await host.RunAsync();

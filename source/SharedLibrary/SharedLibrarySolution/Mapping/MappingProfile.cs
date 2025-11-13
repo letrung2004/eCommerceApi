@@ -8,11 +8,27 @@ namespace SharedLibrarySolution.Mapping
     {
         public MappingProfile()
         {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                        .Where(a =>
+                            !a.FullName!.StartsWith("MassTransit") &&
+                            !a.FullName!.StartsWith("RabbitMQ") &&
+                            !a.IsDynamic &&
+                            !string.IsNullOrEmpty(a.Location))
+                        .ToList();
+
             foreach (var assembly in assemblies)
             {
-                ApplyMappingsFromAssembly(assembly);
+                try
+                {
+                    ApplyMappingsFromAssembly(assembly);
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    // Bỏ qua các assembly không load được type
+                    continue;
+                }
             }
+
         }
         private void ApplyMappingsFromAssembly(Assembly assembly)
         {
