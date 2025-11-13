@@ -15,54 +15,40 @@ var host = Host.CreateDefaultBuilder(args)
     {
         logging.ClearProviders();
         logging.AddConsole();
-        logging.SetMinimumLevel(LogLevel.Debug); // Hiển thị logs MassTransit
+        logging.SetMinimumLevel(LogLevel.Debug);
     })
     .ConfigureServices((hostContext, services) =>
     {
         var configuration = hostContext.Configuration;
 
-        // DbContext
         services.AddDbContext<SagaDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("SagaStateDb")));
 
-        // RabbitMQ settings
         services.Configure<RabbitMqSettings>(configuration.GetSection("RabbitMQ"));
         var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>();
 
-        // MassTransit
         services.AddMassTransit(x =>
         {
             x.AddConsumer<OrderCreatedConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host($"rabbitmq://{rabbitMqSettings!.Host}", h =>
+                cfg.Host(rabbitMqSettings!.Host, h =>
                 {
                     h.Username(rabbitMqSettings.Username);
                     h.Password(rabbitMqSettings.Password);
                 });
 
-                // Queue và consumer
-                cfg.ReceiveEndpoint("order_saga_queue", e =>
-                {
-                    e.ConfigureConsumer<OrderCreatedConsumer>(context);
-                });
-
-                // Tự tạo mọi endpoint & binding cho consumer
                 cfg.ConfigureEndpoints(context);
             });
         });
 
-        // DI Orchestrator & Repository
         services.AddScoped<ISagaOrchestrator, OrderSagaOrchestrator>();
         services.AddScoped<ISagaStateRepository, SagaStateRepository>();
-
-        // Service clients
         services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
         services.AddScoped<IPaymentServiceClient, PaymentServiceClient>();
         services.AddScoped<IOrderServiceClient, OrderServiceClient>();
 
-        // gRPC clients
         services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(options =>
             options.Address = new Uri(configuration["ServiceUrls:InventoryService"]!));
 
@@ -72,13 +58,11 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddGrpcClient<PaymentService.gRPC.RefundService.RefundServiceClient>(options =>
             options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!));
 
-        // HTTP client for OrderService
         services.AddHttpClient<IOrderServiceClient, OrderServiceClient>(client =>
             client.BaseAddress = new Uri(configuration["ServiceUrls:OrderService"]!));
     })
     .Build();
 
-// Migrate database nếu chưa có
 using (var scope = host.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -86,5 +70,5 @@ using (var scope = host.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-Console.WriteLine("OrderSaga.Worker started. Listening for events...");
+Console.WriteLine("✅ OrderSaga.Worker started. Listening for OrderCreatedEvent...");
 await host.RunAsync();

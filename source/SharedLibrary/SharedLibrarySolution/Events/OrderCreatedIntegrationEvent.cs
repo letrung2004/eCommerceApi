@@ -1,10 +1,18 @@
 ﻿namespace SharedLibrarySolution.Events
 {
-    public class OrderCreatedIntegrationEvent(Guid orderId, Guid userId, decimal totalPrice) : IntegrationEvent
+    public class OrderCreatedIntegrationEvent : IntegrationEvent
     {
-        public Guid OrderId { get; private set; } = orderId;
-        public Guid UserId { get; private set; } = userId;
-        public decimal TotalPrice { get; private set; } = totalPrice;
+        public Guid OrderId { get; set; } 
+        public Guid UserId { get; set; }
+        public decimal TotalPrice { get; set; }
 
+        public OrderCreatedIntegrationEvent() { } // Bắt buộc
+
+        public OrderCreatedIntegrationEvent(Guid orderId, Guid userId, decimal totalPrice)
+        {
+            OrderId = orderId;
+            UserId = userId;
+            TotalPrice = totalPrice;
+        }
     }
 }
