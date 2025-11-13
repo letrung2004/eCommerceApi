@@ -81,6 +81,7 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
                     {
                         // trả về true/false đặt hàng => giảm số lượng trong db để giữ hàng tránh bị xung đột
                         var inventoryReserve = await _inventoryServiceClient.ReserveInventoryAsync(item.ProductId, item.Quantity, cancellationToken);
+                        Console.WriteLine("Checkkkkkk reserver order");
                         if (!inventoryReserve)
                         {
                             // false => không đủ hàng
@@ -154,13 +155,22 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
                     case OrderSagaStep.InventoryReserved:
                         Console.WriteLine("check Xử lý số lượng sản phẩm đã giữ tạm");
                         var orderItem = await _orderServiceClient.GetOrderItemByIdAsync(sagaState.OrderId);
-                        foreach (var item in sagaState.ReservedItems)
+                        if (sagaState.ReservedItems != null && sagaState.ReservedItems.Any())
                         {
-                            await _inventoryServiceClient.ReleaseInventoryAsync(
-                            item.ProductId,
-                            item.Quantity,
-                            cancellationToken
-                        );
+                            foreach (var item in sagaState.ReservedItems)
+                            {
+                                _logger.LogInformation(
+                                    "Releasing inventory: ProductId={ProductId}, Quantity={Quantity}",
+                                    item.ProductId,
+                                    item.Quantity
+                                );
+
+                                await _inventoryServiceClient.ReleaseInventoryAsync(
+                                    item.ProductId,
+                                    item.Quantity,
+                                    cancellationToken
+                                );
+                            }
                         }
                         goto case OrderSagaStep.OrderMarkedAsProcessing;
 

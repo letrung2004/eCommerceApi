@@ -38,7 +38,8 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
                 throw new AppException("Đơn hàng phải có ít nhất một sản phẩm.");
 
             // check stock gọi inventory service qua grcp
-            foreach (var item in request.Items) {
+            foreach (var item in request.Items)
+            {
                 var available = await _inventoryClient.CheckStockAsync(item.ProductId, item.Quantity);
                 if (!available)
                     throw new AppException($"Sản phẩm {item.ProductId} không đủ hàng trong kho.");
@@ -60,21 +61,20 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
             await orderRepo.CreateAsync(newOrder);
 
             //Commit transaction
-            //await _unitOfWork.CommitAsync(); //tắc để debug
+            await _unitOfWork.CommitAsync(); //tắc để debug
 
             // gửi event order create -> payment (if don't success rollback)
             var integrationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
             // PUBLISH với ROUTING KEY
-            await _publishEndpoint.Publish(integrationEvent, ctx =>
-            {
-                ctx.SetRoutingKey("order.created");
-            }, cancellationToken);
+            await _publishEndpoint.Publish(integrationEvent, cancellationToken);
 
             Console.WriteLine($"PRODUCER SENT => OrderId={newOrder.Id}, Total=${newOrder.TotalPrice}, UserId=${newOrder.UserId}");
 
             return _mapper.Map<OrderResponse>(newOrder);
 
         }
+    
+    
     }
 }
 

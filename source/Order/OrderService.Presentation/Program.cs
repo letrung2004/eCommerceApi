@@ -22,7 +22,7 @@ builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(
 });
 builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
-// PRODUCER - Cấu hình giống Basket/Product
+// PRODUCER 
 builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
@@ -38,9 +38,6 @@ builder.Services.AddMassTransit(x =>
             h.Password(password);
         });
 
-        // Cấu hình Exchange cho OrderCreatedIntegrationEvent
-        cfg.Message<OrderCreatedIntegrationEvent>(m => m.SetEntityName("order_exchange"));
-        cfg.Publish<OrderCreatedIntegrationEvent>(p => p.ExchangeType = "direct");
     });
 });
 

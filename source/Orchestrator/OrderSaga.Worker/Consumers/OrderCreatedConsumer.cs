@@ -43,7 +43,7 @@ namespace OrderSaga.Worker.Consumers
             }
             catch (Exception ex)
             {
-                // ✅ Log lỗi chi tiết
+                // Log lỗi chi tiết
                 Console.WriteLine("========================================");
                 Console.WriteLine($" SAGA FAILED");
                 Console.WriteLine($"   OrderId: {context.Message.OrderId}");

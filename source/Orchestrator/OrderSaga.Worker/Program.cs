@@ -1,7 +1,5 @@
-﻿using GreenPipes;
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using OrderSaga.Worker.Consumers;
 using OrderSaga.Worker.Data;
 using OrderSaga.Worker.Orchestrator.Implementations;
@@ -29,14 +27,20 @@ var host = Host.CreateDefaultBuilder(args)
         services.Configure<RabbitMqSettings>(configuration.GetSection("RabbitMQ"));
         var rabbitMqSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>();
 
-        // CONSUMER - Cấu hình MANUAL giống Basket
+        Console.WriteLine("====================================");
+        Console.WriteLine("STARTING OrderSaga.Worker");
+        Console.WriteLine($"RabbitMQ Host: {rabbitMqSettings?.Host ?? "NULL"}");
+        Console.WriteLine($"RabbitMQ User: {rabbitMqSettings?.Username ?? "NULL"}");
+        Console.WriteLine("====================================");
+
+        // ✅ CONSUMER - MassTransit 7.x syntax
         services.AddMassTransit(x =>
         {
             x.AddConsumer<OrderCreatedConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host($"rabbitmq://{rabbitMqSettings!.Host}", h =>
+                cfg.Host(rabbitMqSettings!.Host, "/", h =>
                 {
                     h.Username(rabbitMqSettings.Username);
                     h.Password(rabbitMqSettings.Password);
@@ -44,13 +48,11 @@ var host = Host.CreateDefaultBuilder(args)
 
                 cfg.ReceiveEndpoint("order_saga_queue", e =>
                 {
-                    e.ConfigureConsumeTopology = false; // tắt auto binding
-                    e.Bind("SharedLibrarySolution.Events:IntegrationEvent"); // bind queue tới exchange
+                    // MassTransit 7.x tự động bind
                     e.ConfigureConsumer<OrderCreatedConsumer>(context);
                 });
             });
         });
-
 
         services.AddScoped<ISagaOrchestrator, OrderSagaOrchestrator>();
         services.AddScoped<ISagaStateRepository, SagaStateRepository>();
@@ -60,13 +62,10 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(options =>
             options.Address = new Uri(configuration["ServiceUrls:InventoryService"]!));
-
         services.AddGrpcClient<PaymentService.gRPC.PaymentService.PaymentServiceClient>(options =>
             options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!));
-
         services.AddGrpcClient<PaymentService.gRPC.RefundService.RefundServiceClient>(options =>
             options.Address = new Uri(configuration["ServiceUrls:PaymentService"]!));
-
         services.AddHttpClient<IOrderServiceClient, OrderServiceClient>(client =>
             client.BaseAddress = new Uri(configuration["ServiceUrls:OrderService"]!));
     })
@@ -80,10 +79,8 @@ using (var scope = host.Services.CreateScope())
 }
 
 Console.WriteLine("====================================");
-Console.WriteLine("✅ OrderSaga.Worker STARTED");
-Console.WriteLine("📡 Listening on: order_saga_queue");
-Console.WriteLine("🔗 Exchange: order_exchange");
-Console.WriteLine("🔑 Routing Key: order.created");
+Console.WriteLine("OrderSaga.Worker READY");
+Console.WriteLine("Listening on: order_saga_queue");
 Console.WriteLine("====================================");
 
 await host.RunAsync();

@@ -1,5 +1,6 @@
 ﻿using OrderSaga.Worker.DTOs;
 using OrderSaga.Worker.Services.Interfaces;
+using SharedLibrarySolution.Responses;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -27,8 +28,8 @@ namespace OrderSaga.Worker.Services.Implementations
                 var response = await _httpClient.GetAsync($"api/orders/{orderId}/items", cancellationToken);
                 response.EnsureSuccessStatusCode();
 
-                var result = await response.Content.ReadFromJsonAsync<List<OrderItemDto>>(_jsonOptions, cancellationToken);
-                return result ?? new List<OrderItemDto>();
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<OrderItemDto>>>(_jsonOptions, cancellationToken);
+                return result?.Result ?? new List<OrderItemDto>();
             }
             catch (Exception ex)
             {
