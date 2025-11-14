@@ -1,4 +1,4 @@
-# E-Commerce — API Sàn Thương Mại Điện Tử Microservices
+# E-Commerce — Distributed Microservices Platform (.NET 8)
 
 [![Frontend](https://img.shields.io/badge/Frontend-React_TypeScript-blue)]()
 [![Backend](https://img.shields.io/badge/Backend-.NET_8_&_C%23-brightgreen)]()
@@ -12,7 +12,16 @@
 
 ---
 
-## Project Highlights
+## Overview
+A cloud-native, event-driven **eCommerce microservices platform** built with **.NET 8**, designed to simulate real-world enterprise architecture.
+This project demonstrates:
+- Distributed microservices using Clean Architecture + DDD
+- Event-Driven communication with RabbitMQ & MassTransit
+- Saga orchestration & workflow automation
+- Outbox / Inbox for **exactly-once** event delivery
+- High-performance gRPC communication
+- Full observability using OpenTelemetry, Prometheus, Grafana
+- Secure identity management (JWT RS256, Duende IdentityServer)
 
 ### Gateway
 - YARP (.NET 8) với Rate Limiting + Output Caching
@@ -65,6 +74,34 @@
 ---
 
 ## Getting Started
+
+### Prerequisites
+- .NET 8 SDK
+- Docker & Docker Compose
+- Node.js (for frontend)
+- Redis
+- RabbitMQ
+- MongoDB
+- PostgreSQL/SQL Server
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd ecommerce-microservices
+```
+
+2. Start infrastructure services
+```bash
+docker-compose up -d
+```
+
+3. Run database migrations
+```bash
+dotnet ef database update --project src/Services/Ordering
+dotnet ef database update --project src/Services/Inventory
+```
 
 ### Prerequisites
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
