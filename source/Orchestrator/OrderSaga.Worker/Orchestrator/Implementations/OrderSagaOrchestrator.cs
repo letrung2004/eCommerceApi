@@ -1,4 +1,5 @@
-﻿using OrderSaga.Worker.Entities;
+﻿using InventoryService.gRPC;
+using OrderSaga.Worker.Entities;
 using OrderSaga.Worker.Enums;
 using OrderSaga.Worker.Orchestrator.Interfaces;
 using OrderSaga.Worker.Repositories.Interfaces;
@@ -81,6 +82,7 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
                     {
                         // trả về true/false đặt hàng => giảm số lượng trong db để giữ hàng tránh bị xung đột
                         var inventoryReserve = await _inventoryServiceClient.ReserveInventoryAsync(item.ProductId, item.Quantity, cancellationToken);
+                        Console.WriteLine("Checkkkkkk reserver order");
                         if (!inventoryReserve)
                         {
                             // false => không đủ hàng
@@ -92,6 +94,10 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
 
                         newSagaState.CurrentStep = OrderSagaStep.InventoryReserved; // đánh dấu bước mà saga đã làm tới
                         await stateRepository.UpdateSagaStateAsync(newSagaState, cancellationToken);
+
+                        // Thêm delay để test DB
+                        //Console.WriteLine($"Đã reserve {item.Quantity} sản phẩm {item.ProductId}. Chờ 5 giây...");
+                        //await Task.Delay(7000, cancellationToken); // 7 giây
                     }
                 }
                 //b3: thực hiện thanh toán - payment service 
@@ -119,6 +125,15 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
 
 
                 //b4: đánh dấu đơn hàng hoàn thành - order service gọi api đến báo hoàn thành đơn hàng
+                //-> đánh dấu đơn hàng đã thanh toán nếu payment trả success
+
+                // cập nhật lại số lượng giữ hàng trong kho
+                // Bước thanh toán thành công xong
+                foreach (var item in newSagaState.ReservedItems)
+                {
+                    await _inventoryServiceClient.ConfirmInventoryAsync( item.ProductId );
+                }
+
                 await _orderServiceClient.MarkOrderAsPaidAsync(orderEvent.OrderId, cancellationToken);
                 newSagaState.CurrentStep = OrderSagaStep.OrderCompleted;
                 newSagaState.Status = SagaStatus.Completed;
@@ -154,13 +169,22 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
                     case OrderSagaStep.InventoryReserved:
                         Console.WriteLine("check Xử lý số lượng sản phẩm đã giữ tạm");
                         var orderItem = await _orderServiceClient.GetOrderItemByIdAsync(sagaState.OrderId);
-                        foreach (var item in sagaState.ReservedItems)
+                        if (sagaState.ReservedItems != null && sagaState.ReservedItems.Any())
                         {
-                            await _inventoryServiceClient.ReleaseInventoryAsync(
-                            item.ProductId,
-                            item.Quantity,
-                            cancellationToken
-                        );
+                            foreach (var item in sagaState.ReservedItems)
+                            {
+                                _logger.LogInformation(
+                                    "Releasing inventory: ProductId={ProductId}, Quantity={Quantity}",
+                                    item.ProductId,
+                                    item.Quantity
+                                );
+
+                                await _inventoryServiceClient.ReleaseInventoryAsync(
+                                    item.ProductId,
+                                    item.Quantity,
+                                    cancellationToken
+                                );
+                            }
                         }
                         goto case OrderSagaStep.OrderMarkedAsProcessing;
 

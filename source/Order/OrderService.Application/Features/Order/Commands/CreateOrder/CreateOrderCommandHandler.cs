@@ -38,7 +38,8 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
                 throw new AppException("Đơn hàng phải có ít nhất một sản phẩm.");
 
             // check stock gọi inventory service qua grcp
-            foreach (var item in request.Items) {
+            foreach (var item in request.Items)
+            {
                 var available = await _inventoryClient.CheckStockAsync(item.ProductId, item.Quantity);
                 if (!available)
                     throw new AppException($"Sản phẩm {item.ProductId} không đủ hàng trong kho.");
@@ -48,7 +49,7 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
 
             // Tạo danh sách OrderItem từ request
             var orderItems = request.Items.Select(i =>
-                new OrderItem(orderId, i.ProductId, i.Quantity, i.Price)
+                new OrderItem(orderId, i.ProductId, i.Quantity, i.Price, i.Sku)
             ).ToList();
 
             // Tạo Order domain entity
@@ -63,13 +64,17 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
             await _unitOfWork.CommitAsync(); //tắc để debug
 
             // gửi event order create -> payment (if don't success rollback)
-            var interationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
-            await _publishEndpoint.Publish(interationEvent, cancellationToken); 
-            // mastransit gửi event OrderCreatedIntegrationEvent đi => consummer nào đăng ký nhận event này thì sẽ nhận
+            var integrationEvent = new OrderCreatedIntegrationEvent(newOrder.Id, newOrder.UserId, newOrder.TotalPrice);
+            // PUBLISH với ROUTING KEY
+            await _publishEndpoint.Publish(integrationEvent, cancellationToken);
+
+            Console.WriteLine($"PRODUCER SENT => OrderId={newOrder.Id}, Total=${newOrder.TotalPrice}, UserId=${newOrder.UserId}");
 
             return _mapper.Map<OrderResponse>(newOrder);
 
         }
+    
+    
     }
 }
 

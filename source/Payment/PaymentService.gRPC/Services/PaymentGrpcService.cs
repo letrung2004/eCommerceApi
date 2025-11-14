@@ -1,7 +1,6 @@
 ﻿using Grpc.Core;
 using PaymentService.gRPC.Application.Mappings;
 using PaymentService.gRPC.Application.Services;
-using PaymentService.gRPC.Domain.Entities;
 
 
 namespace PaymentService.gRPC.Services
@@ -36,6 +35,7 @@ namespace PaymentService.gRPC.Services
 
         public override async Task<PaymentResponse> ProcessPayment(ProcessPaymentRequest request, ServerCallContext context)
         {
+            // hiện đang chưa xử lý thanh toán nên việc thanh toán thành công đang là mặc định
             var p = await _appService.ProcessPaymentAsync(Guid.Parse(request.PaymentId));
             return PaymentMapper.ToResponse(p, "Payment processed");
 

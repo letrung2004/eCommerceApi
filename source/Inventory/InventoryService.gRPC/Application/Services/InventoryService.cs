@@ -22,9 +22,15 @@ namespace InventoryService.gRPC.Application.Services
         public async Task<bool> ReserveItem(string productId, int qty)
         {
             var item = await _inventoryRepository.GetByProductIdAsync(productId);
+
             if (item == null || !item.HasSufficientQuantity(qty)) return false;
 
-            item.Reserve(qty);
+            var reserved = item.Reserve(qty);
+            if (!reserved)
+            {
+                Console.WriteLine($"Cannot reserve {qty} for product {productId}. Available: {item.AvailableQuantity}");
+                return false;
+            }
             await _inventoryRepository.UpdateAsync(item);
             return true;
         }

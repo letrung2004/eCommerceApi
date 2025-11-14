@@ -26,6 +26,8 @@ namespace PaymentService.gRPC.Application.Services
             if (payment == null)
                 throw new KeyNotFoundException("Payment không tồn tại.");
 
+            // thanh toán thật tại đây -  gọi đến các cổng xử lý thanh toán
+
             payment.MarkProcessed();
             await _paymentRepository.UpdateAsync(payment);
             return payment;

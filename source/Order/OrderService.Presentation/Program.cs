@@ -1,114 +1,78 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using MassTransit;
 using OrderService.Application;
-using OrderService.Application.Services.Interfaces;
 using OrderService.Application.Services.Implementations;
+using OrderService.Application.Services.Interfaces;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
-using MassTransit;
-
+using SharedLibrarySolution.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// client order service  kết nối với inventory service để gọi đến các method của inventory service
-builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient
->(client =>
-{
-    client.Address = new Uri("http://localhost:8083"); // môi trường dev
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.AddFilter("MassTransit", LogLevel.Debug);
+builder.Logging.AddFilter("MassTransit.RabbitMqTransport", LogLevel.Debug);
 
+// gRPC client
+builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(client =>
+{
+    client.Address = new Uri("http://localhost:8083");
 });
-// Đăng ký wrapper interface call đển inventoryservice
 builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
-// MassTransit + RabbitMQ
+// PRODUCER 
 builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitMqSection = builder.Configuration.GetSection("RabbitMQ");
-        var host = rabbitMqSection["Host"];
-        var username = rabbitMqSection["Username"];
-        var password = rabbitMqSection["Password"];
+        var host = rabbitMqSection["Host"] ?? "localhost";
+        var username = rabbitMqSection["Username"] ?? "guest";
+        var password = rabbitMqSection["Password"] ?? "guest";
 
-        cfg.Host(new Uri($"rabbitmq://{host}"), h =>
+        cfg.Host(host, h =>
         {
             h.Username(username);
             h.Password(password);
         });
+
     });
 });
 
-// Dùng Autofac để DI tự động không cần khai báo
+// Autofac
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-
-// cấu hình kết nói SQL server
 builder.Services.AddInfrastructureServices(builder.Configuration);
-builder.Services.AddApplicationServices(); // cấu hình MediatR, AutoMapper hoặc Validator.
-builder.Services.AddJWTAuthenticationScheme(builder.Configuration); // cấu hình Cấu hình middleware xác thực.
-
-
+builder.Services.AddApplicationServices();
+builder.Services.AddJWTAuthenticationScheme(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()); // chuyển enum int về string
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
 builder.Services.AddSwaggerDocumentation();
 
-//Autofac - auto dependency injections Container
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterAssemblyTypes(typeof(OrderService.Infrastructure.ConfigureServices).Assembly)
         .Where(t => t.Name.EndsWith("Repository") ||
                     t.Name.EndsWith("Service") ||
                     t.Name.EndsWith("Hasher") ||
-                    t.Name.EndsWith("UnitOfWork")) 
+                    t.Name.EndsWith("UnitOfWork"))
         .AsImplementedInterfaces()
         .InstancePerLifetimeScope();
 });
 
-
 var app = builder.Build();
 
-// Global Exception Middleware
-//app.UseSharedPoliciesForBackendServices(); // vừa có GlobalException vừa có chặn các request với header k phải gateway
-app.UseSharedPolicies(); // test khi chưa bật gateway
-
-// Swagger
+app.UseSharedPolicies();
 app.UseSwaggerDocumentation();
-
-// Auth
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Map Controllers
 app.MapControllers();
 
 app.Run();
-
-
-
-// note
-
-//➡ Khi biên dịch (codegen), nó tạo ra 2 thứ:
-
-//Bên InventoryService(server) triển khai InventoryBase
-//→ trả CheckInventoryReply.
-
-//Bên OrderService (client) sử dụng Inventory.InventoryClient
-//→ gọi CheckInventoryAsync(...) và nhận về CheckInventoryReply.
-
-
-
-
-//note 2
-
-//[OrderService.Application]    <--- gọi qua gRPC --->   [InventoryService.gRPC]
-//     |
-//     |--- dùng IInventoryServiceClient (interface)
-//     |
-//     |--- return bool hoặc DTO tùy logic nội bộ
-// phải có cấu hình ở file solution và cả program.cs: both( server + client), server, client
