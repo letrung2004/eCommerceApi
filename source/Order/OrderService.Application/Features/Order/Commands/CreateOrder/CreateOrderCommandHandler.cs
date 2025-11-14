@@ -49,7 +49,7 @@ namespace OrderService.Application.Features.Order.Commands.CreateOrder
 
             // Tạo danh sách OrderItem từ request
             var orderItems = request.Items.Select(i =>
-                new OrderItem(orderId, i.ProductId, i.Quantity, i.Price)
+                new OrderItem(orderId, i.ProductId, i.Quantity, i.Price, i.Sku)
             ).ToList();
 
             // Tạo Order domain entity

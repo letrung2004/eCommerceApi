@@ -1,4 +1,5 @@
-﻿using OrderSaga.Worker.Entities;
+﻿using InventoryService.gRPC;
+using OrderSaga.Worker.Entities;
 using OrderSaga.Worker.Enums;
 using OrderSaga.Worker.Orchestrator.Interfaces;
 using OrderSaga.Worker.Repositories.Interfaces;
@@ -93,6 +94,10 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
 
                         newSagaState.CurrentStep = OrderSagaStep.InventoryReserved; // đánh dấu bước mà saga đã làm tới
                         await stateRepository.UpdateSagaStateAsync(newSagaState, cancellationToken);
+
+                        // Thêm delay để test DB
+                        //Console.WriteLine($"Đã reserve {item.Quantity} sản phẩm {item.ProductId}. Chờ 5 giây...");
+                        //await Task.Delay(7000, cancellationToken); // 7 giây
                     }
                 }
                 //b3: thực hiện thanh toán - payment service 
@@ -120,6 +125,15 @@ namespace OrderSaga.Worker.Orchestrator.Implementations
 
 
                 //b4: đánh dấu đơn hàng hoàn thành - order service gọi api đến báo hoàn thành đơn hàng
+                //-> đánh dấu đơn hàng đã thanh toán nếu payment trả success
+
+                // cập nhật lại số lượng giữ hàng trong kho
+                // Bước thanh toán thành công xong
+                foreach (var item in newSagaState.ReservedItems)
+                {
+                    await _inventoryServiceClient.ConfirmInventoryAsync( item.ProductId );
+                }
+
                 await _orderServiceClient.MarkOrderAsPaidAsync(orderEvent.OrderId, cancellationToken);
                 newSagaState.CurrentStep = OrderSagaStep.OrderCompleted;
                 newSagaState.Status = SagaStatus.Completed;
