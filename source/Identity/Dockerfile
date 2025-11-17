@@ -19,7 +19,7 @@ COPY source/Identity/IdentityService.Presentation/*.csproj ./source/Identity/Ide
 WORKDIR /src/source/Identity/IdentityService.Presentation
 RUN dotnet restore
 
-# ✅ Copy full source code (after restore)
+# Copy full source code (after restore)
 WORKDIR /src
 COPY source/Identity ./source/Identity
 
