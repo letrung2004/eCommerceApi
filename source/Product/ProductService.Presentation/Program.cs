@@ -26,8 +26,8 @@ var builder = WebApplication.CreateBuilder(args);
 // kết nối với inventory service để gọi đến các method của inventory service
 builder.Services.AddGrpcClient<InventoryService.gRPC.Product.ProductClient>(client =>
 {
-    // client.Address = new Uri("http://inventoryservice-api:80"); // docker-compose
-    client.Address = new Uri("http://localhost:8083"); // môi trường dev
+    client.Address = new Uri("http://inventory-service:8083"); // docker-compose
+    //client.Address = new Uri("http://localhost:8083"); // môi trường dev
 
 });
 
@@ -42,13 +42,17 @@ builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", h =>
+        // Đọc từ appsettings.json
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitMqUser = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPass = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+        cfg.Host(rabbitMqHost, h =>
         {
-            h.Username("guest");
-            h.Password("guest");
+            h.Username(rabbitMqUser);
+            h.Password(rabbitMqPass);
         });
 
-        // Cấu hình Publish cho ProductUpdatedEvent
         cfg.Message<ProductUpdatedEvent>(m => m.SetEntityName("product_exchange"));
         cfg.Publish<ProductUpdatedEvent>(p => p.ExchangeType = "direct");
     });

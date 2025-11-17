@@ -19,10 +19,14 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", h =>
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitMqUser = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPass = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+        cfg.Host(rabbitMqHost, h =>
         {
-            h.Username("guest");
-            h.Password("guest");
+            h.Username(rabbitMqUser);
+            h.Password(rabbitMqPass);
         });
 
         cfg.ReceiveEndpoint("basket_product_update_queue", e =>
@@ -66,7 +70,7 @@ app.UseHttpsRedirection();
 app.UseSharedPolicies();
 
 
-// 🔹 Swagger
+// Swagger
 app.UseSwaggerDocumentation();
 // Chứng thực và phân quyền
 app.UseAuthentication();

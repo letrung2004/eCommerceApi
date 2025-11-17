@@ -10,7 +10,7 @@ services:
       - SA_PASSWORD=${SA_PASSWORD}
       - MSSQL_PID=Developer
     ports:
-      - "1434:1433" # port khác để không bị conflict với sql server trên máy
+      - "1434:1433"
     volumes:
       - sql_data:/var/opt/mssql
     networks:
@@ -90,12 +90,75 @@ services:
     networks:
       - ecommerce-net
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+
+  inventory-service:
+    build:
+      context: . 
+      dockerfile: source/Inventory/Dockerfile
+    container_name: inventory-service
+    ports:
+      - "8083:8083"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ConnectionStrings__InventoryConnection=Server=sqlserver,1433;Database=InventoryDb;User ID=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+    depends_on: 
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+  product-service:
+    build:
+      context: .
+      dockerfile: source/Product/Dockerfile
+    container_name: product-service
+    ports:
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__MongoDb=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb-docker:27017/ProductServiceDb?authSource=admin
+      - RabbitMQ__Host=rabbitmq-docker
+      - RabbitMQ__Username=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASS}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+  basket-service:
+    build:
+      context: .
+      dockerfile: source/Basket/Dockerfile
+    container_name: basket-service
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - RedisSettings__ConnectionString=redis-docker:6379
+      - RedisSettings__InstanceName=BasketService_
+      - RabbitMQ__Host=rabbitmq-docker
+      - RabbitMQ__Username=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASS}
+      - JwtSettings__Issuer=http://identity-service:8080
+      - JwtSettings__Audience=http://identity-service:8080
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
  
 # ========== NETWORK ==========
 networks:
@@ -108,3 +171,6 @@ volumes:
     driver: local
   mongo_data:
     driver: local
+
+
+# con cấu hình basket trong compose

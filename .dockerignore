@@ -1,0 +1,37 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+# NuGet
+**/packages/
+**/.nuget/
+**/NuGet.config
+
+# IDE
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Git
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# Docker
+**/Dockerfile
+**/docker-compose*
+**/.dockerignore
+
+# Logs
+**/logs/
+**/*.log
