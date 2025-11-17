@@ -5,6 +5,8 @@ using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Security;
 using IdentityService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using IdentityService.Infrastructure.Data;
 
 
 var builder = WebApplication.CreateBuilder(args); // khỏi tạo đối tượng để đăng ký các DI, middleware, service container.
@@ -50,5 +52,12 @@ app.UseAuthorization();
 
 // Map Controllers
 app.MapControllers();
+
+// Tự động migrate IdentityDbContext khi container chạy
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+    db.Database.Migrate(); // tạo bảng nếu chưa có
+}
 
 app.Run();
