@@ -5,6 +5,9 @@ WORKDIR /src
 # Copy solution file
 COPY eCommerceApi.sln .
 
+# Copy InventoryService (bắt buộc để ProductService build)
+COPY source/Inventory ./source/Inventory
+
 # Copy SharedLibrary
 COPY source/SharedLibrary/SharedLibrarySolution/SharedLibrarySolution.csproj ./source/SharedLibrary/SharedLibrarySolution/
 COPY source/SharedLibrary/SharedLibrarySolution ./source/SharedLibrary/SharedLibrarySolution

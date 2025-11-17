@@ -2,7 +2,7 @@
   # ========== DATABASE ==========
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+    container_name: sqlserver-docker
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Lqt@2004
@@ -15,7 +15,7 @@
 
   mongodb:
     image: mongo:7
-    container_name: mongodb
+    container_name: mongodb-docker
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin123
@@ -28,7 +28,7 @@
 
   redis:
     image: redis:7
-    container_name: redis
+    container_name: redis-docker
     ports:
       - "6379:6379"
     networks:
@@ -36,7 +36,7 @@
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: rabbitmq-docker
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -85,17 +85,17 @@
     networks:
       - ecommerce-net
 
-  # basket:
-  #   build:
-  #     context: .
-  #     dockerfile: source/Basket/Dockerfile
-  #   container_name: basket
-  #   ports:
-  #     - "8082:8080"
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #   networks:
-  #     - ecommerce-net
+  basket:
+    build:
+      context: .
+      dockerfile: source/Basket/Dockerfile
+    container_name: basket
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - ecommerce-net
 
 # ========== NETWORK ==========
 networks:
