@@ -2,7 +2,6 @@
 using InventoryService.gRPC.Infrastructure.Data;
 using InventoryService.gRPC.Infrastructure.Repositories;
 using InventoryService.gRPC.Services;
-
 //using InventoryService.gRPC.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +18,12 @@ builder.Services.AddScoped<InventoryService.gRPC.Application.Services.InventoryS
 builder.Services.AddScoped<InventoryService.gRPC.Application.Services.ProductAppService>();
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InventoryServiceDbContext>();
+    db.Database.Migrate();
+}
 //app.MigrateInventoryDatabase();
 
 //Configure the HTTP request pipeline.

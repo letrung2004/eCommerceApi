@@ -30,17 +30,16 @@
 	  <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
 	</ItemGroup>
 
-	<!-- ✅ FIX LỖI APPSETTINGS CONFLICT - Thêm trước thẻ đóng </Project> -->
-	<Target Name="RemoveConflictingConfigFiles" AfterTargets="ComputeFilesToPublish">
+	<Target Name="RemoveConflictingFiles" AfterTargets="ComputeFilesToPublish">
 		<ItemGroup>
-			<!-- Chỉ giữ lại appsettings.json của chính service này -->
 			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
-				Condition="(
-				$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.json')) 
-				OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Development.json'))
-			) AND !(
-				$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('$(MSBuildProjectName)'))
-			)" />
+			  Condition="(
+        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('InventoryService.gRPC'))
+      ) AND (
+        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.json')) 
+        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Development.json'))
+        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Production.json'))
+      )" />
 		</ItemGroup>
 	</Target>
 </Project>
