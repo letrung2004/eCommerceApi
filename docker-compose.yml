@@ -1,112 +1,4 @@
-﻿# services:
-#   ========== DATABASE ==========
-#   sqlserver:
-#     image: mcr.microsoft.com/mssql/server:2022-latest
-#     container_name: sqlserver-docker
-#     environment:
-#       - ACCEPT_EULA=Y
-#       - SA_PASSWORD=Lqt@2004
-#     ports:
-#       - "1433:1433"
-#     volumes:
-#       - sql_data:/var/opt/mssql
-#     networks:
-#       - ecommerce-net
-
-#   mongodb:
-#     image: mongo:7
-#     container_name: mongodb-docker
-#     environment:
-#       - MONGO_INITDB_ROOT_USERNAME=admin
-#       - MONGO_INITDB_ROOT_PASSWORD=admin123
-#     ports:
-#       - "27017:27017"
-#     volumes:
-#       - mongo_data:/data/db
-#     networks:
-#       - ecommerce-net
-
-#   redis:
-#     image: redis:7
-#     container_name: redis-docker
-#     ports:
-#       - "6379:6379"
-#     networks:
-#       - ecommerce-net
-
-#   rabbitmq:
-#     image: rabbitmq:3-management
-#     container_name: rabbitmq-docker
-#     ports:
-#       - "5672:5672"
-#       - "15672:15672"
-#     networks:
-#       - ecommerce-net
-
-#   ========== API GATEWAY ==========
-#   gateway:
-#     build:
-#       context: .
-#       dockerfile: source/Gateway/Dockerfile
-#     container_name: gateway
-#     ports:
-#       - "8888:8080"
-#     environment:
-#       - ASPNETCORE_ENVIRONMENT=Development
-#       - ASPNETCORE_URLS=http://+:8080
-#     depends_on:
-#       - identity
-#       - product
-#     networks:
-#       - ecommerce-net
-
-#   ========== MICROSERVICES ==========
-#   identity:
-#     build:
-#       context: .
-#       dockerfile: source/Identity/Dockerfile
-#     container_name: identity
-#     ports:
-#       - "8080:8080"
-#     environment:
-#       - ASPNETCORE_ENVIRONMENT=Development
-#     networks:
-#       - ecommerce-net
-
-#   product:
-#     build:
-#       context: .
-#       dockerfile: source/Product/Dockerfile
-#     container_name: product
-#     ports:
-#       - "8081:8080"
-#     environment:
-#       - ASPNETCORE_ENVIRONMENT=Development
-#     networks:
-#       - ecommerce-net
-
-#   basket:
-#     build:
-#       context: .
-#       dockerfile: source/Basket/Dockerfile
-#     container_name: basket
-#     ports:
-#       - "8082:8080"
-#     environment:
-#       - ASPNETCORE_ENVIRONMENT=Development
-#     networks:
-#       - ecommerce-net
-
-# ========== NETWORK ==========
-# networks:
-#   ecommerce-net:
-#     driver: bridge
-
-# ========== VOLUMES ==========
-# volumes:
-#   sql_data:
-#   mongo_data:
-
+﻿version: '3.8'
 
 services:
   # ========== DATABASE ==========
@@ -115,25 +7,27 @@ services:
     container_name: sqlserver-docker
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=Lqt@2004
+      - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
     ports:
-      - "1433:1433"
+      - "1434:1433" # port khác để không bị conflict với sql server trên máy
     volumes:
       - sql_data:/var/opt/mssql
     networks:
       - ecommerce-net
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Lqt@2004 -Q "SELECT 1" -C || exit 1
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $${SA_PASSWORD} -Q 'SELECT 1' -C -l 1"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 10
+      start_period: 30s
 
   mongodb:
     image: mongo:7
     container_name: mongodb-docker
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin123
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
@@ -141,13 +35,14 @@ services:
     networks:
       - ecommerce-net
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     container_name: redis-docker
     ports:
       - "6379:6379"
@@ -160,18 +55,22 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management-alpine
     container_name: rabbitmq-docker
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
       - ecommerce-net
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   # ========== MICROSERVICES ==========
   identity-service:
@@ -183,36 +82,21 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__IdentityConnection=Server=sqlserver;Database=IdentityECommerceDb;User ID=sa;Password=Lqt@2004;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ConnectionStrings__IdentityConnection=Server=sqlserver,1433;Database=IdentityDb;User ID=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
     depends_on:
       sqlserver:
         condition: service_healthy
     networks:
       - ecommerce-net
-    restart: on-failure
-
-  product-service:
-    build:
-      context: .
-      dockerfile: source/Product/Dockerfile
-    container_name: product-service
-    ports:
-      - "8081:8081"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__MongoDb=mongodb://admin:admin123@mongodb:27017/ProductServiceDb?authSource=admin
-      - RabbitMQ__Host=rabbitmq
-      - JwtSettings__Issuer=http://identity-service:8080
-      - JwtSettings__Audience=http://gateway:8000
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - ecommerce-net
-    restart: on-failure
-
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+ 
 # ========== NETWORK ==========
 networks:
   ecommerce-net:
@@ -221,4 +105,6 @@ networks:
 # ========== VOLUMES ==========
 volumes:
   sql_data:
+    driver: local
   mongo_data:
+    driver: local
