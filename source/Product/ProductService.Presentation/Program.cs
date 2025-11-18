@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MassTransit;
-using ProductService.Presentation.Configurations;
 using ProductService.Presentation.Data;
 using ProductService.Presentation.Entities.Events;
 using ProductService.Presentation.Features.Categories.GetCategories;
@@ -15,6 +14,7 @@ using ProductService.Presentation.Features.Test;
 using ProductService.Presentation.Services;
 using ProductService.Presentation.Services.Implementations;
 using ProductService.Presentation.Services.Interfaces;
+using SharedLibrarySolution.Configuration;
 using SharedLibrarySolution.DependencyInjection;
 using System.Reflection;
 
@@ -82,8 +82,12 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddSwaggerDocumentation();
-//builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerDocumentation(
+    serviceName: "Product Service",
+    description: "Products API for the E-Commerce system",
+    contactName: "Product Service API Team",
+    contactEmail: "support@ecommerceapi.com"
+);//builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<CloudinaryService>(); // service upload ảnh
 
@@ -106,7 +110,7 @@ app.UseSharedPolicies();
 
 
 // Swagger
-app.UseSwaggerDocumentation();
+app.UseSwaggerDocumentation("products");
 
 // Chứng thực và phân quyền
 app.UseAuthentication();

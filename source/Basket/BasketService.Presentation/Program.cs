@@ -4,6 +4,7 @@ using BasketService.Presentation.Features.Baskets.AddItemToBasket;
 using BasketService.Presentation.Features.Baskets.Consumers;
 using BasketService.Presentation.Features.Baskets.GetBasket;
 using MassTransit;
+using SharedLibrarySolution.Configuration;
 using SharedLibrarySolution.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,8 +58,13 @@ builder.Services.AddScoped<GetBasketHandler>();
 
 
 builder.Services.AddControllers();
-builder.Services.AddSwaggerDocumentation();
-
+// ✅ Swagger - Shared Library
+builder.Services.AddSwaggerDocumentation(
+    serviceName: "Basket Service",
+    description: "Basket API document",
+    contactName: "Basket Service API Team",
+    contactEmail: "support@ecommerceapi.com"
+);
 // cấu hình redis
 builder.Services.AddRedisConfiguration(builder.Configuration);
 
@@ -71,7 +77,7 @@ app.UseSharedPolicies();
 
 
 // Swagger
-app.UseSwaggerDocumentation();
+app.UseSwaggerDocumentation("basket");
 // Chứng thực và phân quyền
 app.UseAuthentication();
 app.UseAuthorization();

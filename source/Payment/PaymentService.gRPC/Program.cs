@@ -3,7 +3,6 @@ using PaymentService.gRPC.Application.Interfaces.IRepositories;
 using PaymentService.gRPC.Infrastructure.Data;
 using PaymentService.gRPC.Infrastructure.Repositories;
 using PaymentService.gRPC.Services;
-using Microsoft.EntityFrameworkCore;
 
 
 
