@@ -1,14 +1,14 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using OrderService.Application;
 using OrderService.Application.Services.Implementations;
 using OrderService.Application.Services.Interfaces;
 using OrderService.Infrastructure;
-using OrderService.Presentation.Configuration;
-using SharedLibrarySolution.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
 using OrderService.Infrastructure.Data;
+using SharedLibrarySolution.Configuration;
+using SharedLibrarySolution.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +56,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-builder.Services.AddSwaggerDocumentation();
+builder.Services.AddSwaggerDocumentation(
+    serviceName: "Order Service",
+    description: "Order API for the E-Commerce system",
+    contactName: "Order Service API Team",
+    contactEmail: "support@ecommerceapi.com"
+);
 
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
@@ -92,7 +97,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseSharedPolicies();
-app.UseSwaggerDocumentation();
+app.UseSwaggerDocumentation("order");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -230,6 +230,29 @@ services:
     networks:
       - ecommerce-net
     restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: source/Gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "8888:8888"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8888
+    depends_on:
+      identity-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      basket-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
  
 # ========== NETWORK ==========
 networks:
@@ -244,4 +267,3 @@ volumes:
     driver: local
 
 
-# con cấu hình payment-service còn lỗi

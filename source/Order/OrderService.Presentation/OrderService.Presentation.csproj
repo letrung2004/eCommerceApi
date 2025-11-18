@@ -31,14 +31,7 @@
 
 	<Target Name="RemoveConflictingFiles" AfterTargets="ComputeFilesToPublish">
 		<ItemGroup>
-			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
-			  Condition="(
-        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('InventoryService.gRPC'))
-      ) AND (
-        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.json')) 
-        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Development.json'))
-        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Production.json'))
-      )" />
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="(&#xD;&#xA;        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('InventoryService.gRPC'))&#xD;&#xA;      ) AND (&#xD;&#xA;        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.json')) &#xD;&#xA;        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Development.json'))&#xD;&#xA;        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Production.json'))&#xD;&#xA;      )" />
 		</ItemGroup>
 	</Target>
 </Project>

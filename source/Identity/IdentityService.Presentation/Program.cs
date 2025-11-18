@@ -3,48 +3,53 @@ using Autofac.Extensions.DependencyInjection;
 using IdentityService.Application;
 using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Security;
-using IdentityService.Presentation.Configuration;
+using IdentityService.Infrastructure.Data;
+using SharedLibrarySolution.Configuration;
 using SharedLibrarySolution.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using IdentityService.Infrastructure.Data;
 
+var builder = WebApplication.CreateBuilder(args);
 
-var builder = WebApplication.CreateBuilder(args); // khỏi tạo đối tượng để đăng ký các DI, middleware, service container.
-
-// Dùng Autofac để DI tự động không cần khai báo
+// Dùng Autofac để DI tự động
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-
-// đọc cấu hình jwt để AddJWTAuthenticationScheme sử dụng
+// Cấu hình JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
-
 // Đăng ký các tầng
-builder.Services.AddInfrastructureServices(builder.Configuration); // kết nối database
-builder.Services.AddApplicationServices(); // cấu hình MediatR, AutoMapper hoặc Validator.
-builder.Services.AddJWTAuthenticationScheme(builder.Configuration); // cấu hình Cấu hình middleware xác thực.
+builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddApplicationServices();
+builder.Services.AddJWTAuthenticationScheme(builder.Configuration);
 
+// Controllers
+builder.Services.AddControllers();
 
-builder.Services.AddControllers();// cho phép định nghĩa các controller
-builder.Services.AddSwaggerDocumentation(); 
+// Swagger - Shared Library
+builder.Services.AddSwaggerDocumentation(
+    serviceName: "Identity Service",
+    description: "Authentication and Authorization API for the E-Commerce system",
+    contactName: "Identity Service API Team",
+    contactEmail: "support@ecommerceapi.com"
+);
 
 // Autofac Container
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     containerBuilder.RegisterAssemblyTypes(typeof(IdentityService.Infrastructure.ConfigureServices).Assembly)
-        .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Hasher"))
+        .Where(t => t.Name.EndsWith("Repository") ||
+                    t.Name.EndsWith("Service") ||
+                    t.Name.EndsWith("Hasher"))
         .AsImplementedInterfaces()
         .InstancePerLifetimeScope();
 });
 
-var app = builder.Build(); // tạo app xong chạy qua các middleware
+var app = builder.Build();
 
 // Global Exception Middleware
-//app.UseSharedPoliciesForBackendServices(); // vừa có GlobalException vừa có chặn các request với header k phải gateway
-app.UseSharedPolicies(); // test khi chưa bật gateway
+app.UseSharedPolicies();
 
-// Swagger
-app.UseSwaggerDocumentation();
+// Swagger UI
+app.UseSwaggerDocumentation("identity");
 
 // Auth
 app.UseAuthentication();
@@ -53,11 +58,11 @@ app.UseAuthorization();
 // Map Controllers
 app.MapControllers();
 
-// Tự động migrate IdentityDbContext khi container chạy
+// Auto migrate
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-    db.Database.Migrate(); // tạo bảng nếu chưa có
+    db.Database.Migrate();
 }
 
 app.Run();

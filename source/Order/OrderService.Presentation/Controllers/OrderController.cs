@@ -11,7 +11,7 @@ using SharedLibrarySolution.Responses;
 namespace OrderService.Presentation.Controllers
 {
     [ApiController]
-    [Route("api/orders")]
+    [Route("order")]
     public class OrderController : ControllerBase
     {
         private readonly IMediator _mediator;
