@@ -159,6 +159,77 @@ services:
     networks:
       - ecommerce-net
     restart: unless-stopped
+
+  order-service:
+    build:
+      context: .
+      dockerfile: source/Order/Dockerfile
+    container_name: order-service
+    ports:
+      - "8084:8084"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ConnectionStrings__OrderConnection=Server=sqlserver,1433;Database=OrderDb;User ID=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=${RABBITMQ_USER:-guest}
+      - RabbitMQ__Password=${RABBITMQ_PASS:-guest}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: . 
+      dockerfile: source/Payment/Dockerfile
+    container_name: payment-service
+    ports:
+      - "8085:8085"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ConnectionStrings__PaymentConnection=Server=sqlserver,1433;Database=PaymentDb;User ID=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+    depends_on: 
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
+
+  orchestrator-service:
+    build:
+      context: .
+      dockerfile: source/Orchestrator/Dockerfile
+    container_name: orchestrator-service
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ConnectionStrings__SagaStateDb=Server=sqlserver,1433;Database=SagaStateDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+      - RabbitMQ__Host=rabbitmq-docker
+      - RabbitMQ__Username=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASS}
+      - ServiceUrls__OrderService=http://order-service:8084
+      - ServiceUrls__InventoryService=http://inventory-service:8083
+      - ServiceUrls__PaymentService=http://payment-service:8085
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+    restart: unless-stopped
  
 # ========== NETWORK ==========
 networks:
@@ -173,4 +244,4 @@ volumes:
     driver: local
 
 
-# con cấu hình basket trong compose
+# con cấu hình payment-service còn lỗi
