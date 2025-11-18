@@ -29,18 +29,4 @@
 	  <ProjectReference Include="..\..\Inventory\InventoryService.gRPC\InventoryService.gRPC.csproj" />
 	  <ProjectReference Include="..\..\SharedLibrary\SharedLibrarySolution\SharedLibrarySolution.csproj" />
 	</ItemGroup>
-
-	<Target Name="RemoveConflictingFiles" AfterTargets="ComputeFilesToPublish">
-		<ItemGroup>
-			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
-			  Condition="(
-        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('InventoryService.gRPC'))
-      ) AND (
-        $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.json')) 
-        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Development.json'))
-        OR $([System.String]::Copy('%(ResolvedFileToPublish.Identity)').EndsWith('appsettings.Production.json'))
-      )" />
-		</ItemGroup>
-	</Target>
-	
 </Project>

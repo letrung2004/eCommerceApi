@@ -7,7 +7,8 @@ using OrderService.Application.Services.Interfaces;
 using OrderService.Infrastructure;
 using OrderService.Presentation.Configuration;
 using SharedLibrarySolution.DependencyInjection;
-using SharedLibrarySolution.Events;
+using Microsoft.EntityFrameworkCore;
+using OrderService.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,8 @@ builder.Logging.AddFilter("MassTransit.RabbitMqTransport", LogLevel.Debug);
 // gRPC client
 builder.Services.AddGrpcClient<InventoryService.gRPC.Inventory.InventoryClient>(client =>
 {
-    client.Address = new Uri("http://localhost:8083");
+    client.Address = new Uri("http://inventory-service:8083"); // docker-compose
+    //client.Address = new Uri("http://localhost:8083");
 });
 builder.Services.AddScoped<IInventoryServiceClient, InventoryServiceClient>();
 
@@ -27,15 +29,15 @@ builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        var rabbitMqSection = builder.Configuration.GetSection("RabbitMQ");
-        var host = rabbitMqSection["Host"] ?? "localhost";
-        var username = rabbitMqSection["Username"] ?? "guest";
-        var password = rabbitMqSection["Password"] ?? "guest";
+        // Đọc từ appsettings.json
+        var rabbitMqHost = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitMqUser = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitMqPass = builder.Configuration["RabbitMQ:Password"] ?? "guest";
 
-        cfg.Host(host, h =>
+        cfg.Host(rabbitMqHost, h =>
         {
-            h.Username(username);
-            h.Password(password);
+            h.Username(rabbitMqUser);
+            h.Password(rabbitMqPass);
         });
 
     });
@@ -68,6 +70,26 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 });
 
 var app = builder.Build();
+
+// Tự động migrate OrderDbContext khi container chạy
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>(); // Thay OrderDbContext bằng tên DbContext của bạn
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Starting database migration...");
+        dbContext.Database.Migrate();
+        logger.LogInformation("Database migration completed successfully");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database");
+        throw;
+    }
+}
 
 app.UseSharedPolicies();
 app.UseSwaggerDocumentation();

@@ -1,9 +1,10 @@
-
 using Microsoft.EntityFrameworkCore;
 using PaymentService.gRPC.Application.Interfaces.IRepositories;
 using PaymentService.gRPC.Infrastructure.Data;
 using PaymentService.gRPC.Infrastructure.Repositories;
 using PaymentService.gRPC.Services;
+using Microsoft.EntityFrameworkCore;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,11 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<PaymentService.gRPC.Application.Services.PaymentAppService>();
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+    db.Database.Migrate();
+}
 
 //Configure the HTTP request pipeline.
 app.MapGrpcService<PaymentGrpcService>();
