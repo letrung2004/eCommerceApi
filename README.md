@@ -65,6 +65,8 @@ This project demonstrates:
 ---
 
 ## Architecture Overview
+<img width="1487" height="607" alt="image" src="https://github.com/user-attachments/assets/199cd32f-3f2b-4f91-a7fc-1ba22e488740" />
+
 
 
 - **Communication**: gRPC (sync), RabbitMQ (async)
